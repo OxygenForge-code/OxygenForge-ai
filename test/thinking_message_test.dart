@@ -12,6 +12,7 @@ void main() {
       role: MessageRole.assistant,
       text: '**Sonuç**',
       thinking: 'Önce verileri değerlendirdim.',
+      thinkingDuration: const Duration(milliseconds: 850),
       createdAt: DateTime(2026, 8, 14),
       provider: AiProvider.groq,
       model: 'deepseek-r1-distill-llama-70b',
@@ -21,6 +22,7 @@ void main() {
 
     expect(restored.text, '**Sonuç**');
     expect(restored.thinking, 'Önce verileri değerlendirdim.');
+    expect(restored.thinkingDuration, const Duration(milliseconds: 850));
   });
 
   testWidgets('Asistan mesajı düşünme metnini varsayılan olarak gösterir ve kapatabilir', (tester) async {
@@ -34,6 +36,7 @@ void main() {
               role: MessageRole.assistant,
               text: '**Yanıt**',
               thinking: '1. Bağlamı inceledim.\n2. Uygun sonucu oluşturdum.',
+              thinkingDuration: const Duration(milliseconds: 1350),
               createdAt: DateTime(2026, 8, 14),
               provider: AiProvider.groq,
               model: 'deepseek-r1-distill-llama-70b',
@@ -45,6 +48,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Modelin düşünme süreci'), findsOneWidget);
+    expect(find.text('1.4 sn düşündü'), findsOneWidget);
+    expect(find.byType(FrostedPanel), findsWidgets);
     expect(find.textContaining('Bağlamı inceledim.'), findsOneWidget);
 
     await tester.tap(find.text('Modelin düşünme süreci'));

@@ -123,23 +123,26 @@ class _HomeScreenState extends State<HomeScreen> {
     _scrollToBottom();
 
     try {
+      final thinkingStopwatch = Stopwatch()..start();
       final response = await _aiService.reply(
         history: List<ChatMessage>.of(session.messages),
         settings: _settings,
         attachment: selectedAttachment,
       );
+      thinkingStopwatch.stop();
       if (!mounted) return;
       setState(() {
-        session.messages.add(
-          ChatMessage(
-            id: DateTime.now().microsecondsSinceEpoch.toString(),
-            role: MessageRole.assistant,
-            text: response.text,
-            createdAt: DateTime.now(),
-            provider: _settings.provider,
-            model: _settings.effectiveModel,
-            thinking: response.thinking,
-          ),
+       session.messages.add(
+         ChatMessage(
+           id: DateTime.now().microsecondsSinceEpoch.toString(),
+           role: MessageRole.assistant,
+           text: response.text,
+           createdAt: DateTime.now(),
+           provider: _settings.provider,
+           model: _settings.effectiveModel,
+           thinking: response.thinking,
+            thinkingDuration: thinkingStopwatch.elapsed,
+         ),
         );
         session.updatedAt = DateTime.now();
       });
@@ -351,22 +354,25 @@ class _HomeScreenState extends State<HomeScreen> {
     });
     await _store.saveSessions(_sessions);
     try {
+      final thinkingStopwatch = Stopwatch()..start();
       final response = await _aiService.reply(
         history: List<ChatMessage>.of(session.messages),
         settings: _settings,
       );
+      thinkingStopwatch.stop();
       if (!mounted) return;
       setState(() {
-        session.messages.add(
-          ChatMessage(
-            id: DateTime.now().microsecondsSinceEpoch.toString(),
-            role: MessageRole.assistant,
-            text: response.text,
-            createdAt: DateTime.now(),
-            provider: _settings.provider,
-            model: _settings.effectiveModel,
-            thinking: response.thinking,
-          ),
+       session.messages.add(
+         ChatMessage(
+           id: DateTime.now().microsecondsSinceEpoch.toString(),
+           role: MessageRole.assistant,
+           text: response.text,
+           createdAt: DateTime.now(),
+           provider: _settings.provider,
+           model: _settings.effectiveModel,
+           thinking: response.thinking,
+            thinkingDuration: thinkingStopwatch.elapsed,
+         ),
         );
         session.updatedAt = DateTime.now();
       });
@@ -504,36 +510,82 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildWorkspace(bool isCompact) {
     final session = _selectedSession;
-    return Column(
+    return Stack(
+      fit: StackFit.expand,
       children: [
-        _WorkspaceHeader(
-          isCompact: isCompact,
-          minimal: isCompact,
-          title: session?.title ?? 'Yeni çalışma',
-          profileName: _settings.activeProfile.name,
-          model: _settings.effectiveModel,
-          provider: _settings.provider,
-          connected: _settings.apiKey.isNotEmpty,
-          onSettings: _openSettings,
-          onExport: _exportCurrentSession,
-          onRegenerate: _regenerateLast,
+        const DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFF050505), Color(0xFF000000), Color(0xFF080808)],
+            ),
+          ),
         ),
-        Expanded(child: _buildConversation(session, compact: isCompact)),
-        _QuickActions(
-          onProviders: _openSettings,
-          onCamera: () => _pickImage(ImageSource.camera),
-          onGallery: () => _pickImage(ImageSource.gallery),
+        IgnorePointer(
+          child: Stack(
+            children: [
+              Positioned(
+                top: -130,
+                right: -110,
+                child: Container(
+                  width: 280,
+                  height: 280,
+                  decoration: const BoxDecoration(
+                    color: Color(0x0AFFFFFF),
+                    shape: BoxShape.circle,
+                    boxShadow: [BoxShadow(color: Color(0x18FFFFFF), blurRadius: 110, spreadRadius: 32)],
+                  ),
+                ),
+              ),
+              Positioned(
+                left: -140,
+                bottom: 110,
+                child: Container(
+                  width: 240,
+                  height: 240,
+                  decoration: const BoxDecoration(
+                    color: Color(0x08FFFFFF),
+                    shape: BoxShape.circle,
+                    boxShadow: [BoxShadow(color: Color(0x12FFFFFF), blurRadius: 100, spreadRadius: 24)],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
-        _Composer(
-          controller: _composerController,
-          focusNode: _composerFocusNode,
-          isTyping: _isTyping,
-          isListening: _isListening,
-          attachmentName: _attachment?.name,
-          onSend: _sendMessage,
-          onGallery: () => _pickImage(ImageSource.gallery),
-          onVoice: _toggleVoice,
-          onClearAttachment: () => setState(() => _attachment = null),
+        Column(
+          children: [
+            _WorkspaceHeader(
+              isCompact: isCompact,
+              minimal: isCompact,
+              title: session?.title ?? 'Yeni çalışma',
+              profileName: _settings.activeProfile.name,
+              model: _settings.effectiveModel,
+              provider: _settings.provider,
+              connected: _settings.apiKey.isNotEmpty,
+              onSettings: _openSettings,
+              onExport: _exportCurrentSession,
+              onRegenerate: _regenerateLast,
+            ),
+            Expanded(child: _buildConversation(session, compact: isCompact)),
+            _QuickActions(
+              onProviders: _openSettings,
+              onCamera: () => _pickImage(ImageSource.camera),
+              onGallery: () => _pickImage(ImageSource.gallery),
+            ),
+            _Composer(
+              controller: _composerController,
+              focusNode: _composerFocusNode,
+              isTyping: _isTyping,
+              isListening: _isListening,
+              attachmentName: _attachment?.name,
+              onSend: _sendMessage,
+              onGallery: () => _pickImage(ImageSource.gallery),
+              onVoice: _toggleVoice,
+              onClearAttachment: () => setState(() => _attachment = null),
+            ),
+          ],
         ),
       ],
     );
@@ -563,7 +615,7 @@ class _HomeScreenState extends State<HomeScreen> {
             onSettings: _openSettings,
           );
         }
-        return MessageBubble(message: messages[index]);
+        return MessageBubble(key: ValueKey(messages[index].id), message: messages[index]);
       },
     );
   }
@@ -1007,8 +1059,8 @@ class _QuickActionChipState extends State<_QuickActionChip> with SingleTickerPro
             avatar: Icon(widget.icon, size: 17, color: OxygenForgeTheme.text),
             label: Text(widget.label),
             labelStyle: const TextStyle(color: OxygenForgeTheme.text, fontSize: 12.5, fontWeight: FontWeight.w600),
-            backgroundColor: OxygenForgeTheme.panelRaised,
-            side: const BorderSide(color: OxygenForgeTheme.line),
+            backgroundColor: const Color(0x1CFFFFFF),
+            side: const BorderSide(color: Color(0x36FFFFFF)),
             padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 8),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
           ),
@@ -1051,9 +1103,9 @@ class _Composer extends StatelessWidget {
           duration: MediaQuery.disableAnimationsOf(context) ? Duration.zero : const Duration(milliseconds: 240),
           curve: Curves.easeOutCubic,
           decoration: BoxDecoration(
-            color: OxygenForgeTheme.panelRaised,
+            color: const Color(0xB0111111),
             borderRadius: BorderRadius.circular(22),
-            border: Border.all(color: isListening ? OxygenForgeTheme.violetBright : OxygenForgeTheme.line),
+            border: Border.all(color: isListening ? OxygenForgeTheme.violetBright : const Color(0x36FFFFFF)),
             boxShadow: [
               BoxShadow(
                 color: isListening ? OxygenForgeTheme.text.withValues(alpha: 0.16) : const Color(0x40000000),

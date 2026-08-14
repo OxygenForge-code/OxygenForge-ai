@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 
 class OxygenForgeTheme {
@@ -82,6 +84,49 @@ class ForgeGradient extends LinearGradient {
   });
 }
 
+class FrostedPanel extends StatelessWidget {
+  const FrostedPanel({
+    required this.child,
+    required this.borderRadius,
+    super.key,
+    this.padding = const EdgeInsets.all(20),
+    this.color,
+    this.borderColor,
+    this.blur = 18,
+  });
+
+  final Widget child;
+  final EdgeInsetsGeometry padding;
+  final BorderRadius borderRadius;
+  final Color? color;
+  final Color? borderColor;
+  final double blur;
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: borderRadius,
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
+        child: Container(
+          padding: padding,
+          decoration: BoxDecoration(
+            color: color ?? const Color(0xB30A0A0A),
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0x18FFFFFF), Color(0x05000000)],
+            ),
+            borderRadius: borderRadius,
+            border: Border.all(color: borderColor ?? const Color(0x2EFFFFFF)),
+          ),
+          child: child,
+        ),
+      ),
+    );
+  }
+}
+
 class GlassCard extends StatelessWidget {
   const GlassCard({
     required this.child,
@@ -98,13 +143,11 @@ class GlassCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return FrostedPanel(
       padding: padding,
-      decoration: BoxDecoration(
-        color: color ?? OxygenForgeTheme.panel,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: borderColor ?? OxygenForgeTheme.line),
-      ),
+      borderRadius: BorderRadius.circular(22),
+      color: color ?? const Color(0xC20A0A0A),
+      borderColor: borderColor ?? const Color(0x2EFFFFFF),
       child: child,
     );
   }

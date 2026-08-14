@@ -17,6 +17,12 @@ class MessageBubble extends StatelessWidget {
     final maxWidth = MediaQuery.sizeOf(context).width > 800 ? 720.0 : double.infinity;
     final reduceMotion = MediaQuery.disableAnimationsOf(context);
     final thinking = message.thinking?.trim();
+    final bubbleRadius = BorderRadius.only(
+      topLeft: const Radius.circular(18),
+      topRight: const Radius.circular(18),
+      bottomLeft: Radius.circular(isUser ? 18 : 5),
+      bottomRight: Radius.circular(isUser ? 5 : 18),
+    );
 
     return TweenAnimationBuilder<double>(
       duration: reduceMotion ? Duration.zero : const Duration(milliseconds: 420),
@@ -35,35 +41,34 @@ class MessageBubble extends StatelessWidget {
           constraints: BoxConstraints(maxWidth: maxWidth),
           child: Padding(
             padding: EdgeInsets.only(left: isUser ? 52 : 0, right: isUser ? 0 : 52, bottom: 20),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+            child: Column(
+              crossAxisAlignment: isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
               children: [
-                if (!isUser) const ForgeLogo(compact: true),
-                if (!isUser) const SizedBox(width: 12),
-                Flexible(
-                  child: Container(
-                    padding: const EdgeInsets.fromLTRB(17, 15, 11, 10),
-                    decoration: BoxDecoration(
-                      color: isUser ? OxygenForgeTheme.violet.withValues(alpha: 0.18) : OxygenForgeTheme.panel,
-                      borderRadius: BorderRadius.only(
-                        topLeft: const Radius.circular(18),
-                        topRight: const Radius.circular(18),
-                        bottomLeft: Radius.circular(isUser ? 18 : 5),
-                        bottomRight: Radius.circular(isUser ? 5 : 18),
-                      ),
-                      border: Border.all(
-                        color: isUser ? OxygenForgeTheme.violet.withValues(alpha: 0.35) : OxygenForgeTheme.line,
-                      ),
-                    ),
+                if (!isUser && message.thinkingDuration != null)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 42, bottom: 7),
+                    child: _ThinkingDurationBadge(duration: message.thinkingDuration!),
+                  ),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+                  children: [
+                    if (!isUser) const ForgeLogo(compact: true),
+                    if (!isUser) const SizedBox(width: 12),
+                    Flexible(
+                      child: FrostedPanel(
+                        padding: const EdgeInsets.fromLTRB(17, 15, 11, 10),
+                        borderRadius: bubbleRadius,
+                        blur: 22,
+                        color: isUser ? const Color(0x2EFFFFFF) : const Color(0xB50A0A0A),
+                        borderColor: isUser ? const Color(0x46FFFFFF) : const Color(0x2EFFFFFF),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         if (message.text.trim().isNotEmpty)
-                          MarkdownBody(
-                            data: message.text,
-                            selectable: true,
-                            softLineBreak: true,
+                          _ProgressiveMarkdown(
+                            text: message.text,
+                            animate: !isUser && !reduceMotion,
                             styleSheet: _markdownStyle(context),
                             onTapLink: (text, href, title) {
                               if (href == null) return;
@@ -112,7 +117,9 @@ class MessageBubble extends StatelessWidget {
                         ],
                       ],
                     ),
-                  ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -147,6 +154,105 @@ class MessageBubble extends StatelessWidget {
       ),
       horizontalRuleDecoration: const BoxDecoration(border: Border(top: BorderSide(color: OxygenForgeTheme.line))),
       blockSpacing: 10,
+    );
+  }
+}
+
+class _ThinkingDurationBadge extends StatelessWidget {
+  const _ThinkingDurationBadge({required this.duration});
+
+  final Duration duration;
+
+  @override
+  Widget build(BuildContext context) {
+    final seconds = duration.inMilliseconds / 1000;
+    final label = seconds < 1 ? '${seconds.toStringAsFixed(1)} sn' : '${seconds.toStringAsFixed(1)} sn düşündü';
+    return FrostedPanel(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      borderRadius: BorderRadius.circular(999),
+      blur: 12,
+      color: const Color(0x1AFFFFFF),
+      borderColor: const Color(0x38FFFFFF),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.psychology_alt_rounded, size: 13, color: OxygenForgeTheme.text),
+          const SizedBox(width: 6),
+          Text(label, style: const TextStyle(color: OxygenForgeTheme.text, fontSize: 10.5, fontWeight: FontWeight.w800)),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProgressiveMarkdown extends StatefulWidget {
+  const _ProgressiveMarkdown({
+    required this.text,
+    required this.animate,
+    required this.styleSheet,
+    required this.onTapLink,
+  });
+
+  final String text;
+  final bool animate;
+  final MarkdownStyleSheet styleSheet;
+  final void Function(String text, String? href, String? title) onTapLink;
+
+  @override
+  State<_ProgressiveMarkdown> createState() => _ProgressiveMarkdownState();
+}
+
+class _ProgressiveMarkdownState extends State<_ProgressiveMarkdown> with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  Duration get _duration => Duration(milliseconds: (widget.text.length * 8).clamp(420, 2100));
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(vsync: this, duration: _duration);
+    if (widget.animate) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Future<void>.delayed(const Duration(milliseconds: 150), () {
+          if (mounted) _controller.forward();
+        });
+      });
+    } else {
+      _controller.value = 1;
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant _ProgressiveMarkdown oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.text != widget.text || oldWidget.animate != widget.animate) {
+      _controller.duration = _duration;
+      _controller.value = widget.animate ? 0 : 1;
+      if (widget.animate) _controller.forward();
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, _) {
+        final visibleLength = (_controller.value * widget.text.length).ceil().clamp(0, widget.text.length);
+        final visibleText = widget.text.substring(0, visibleLength);
+        return MarkdownBody(
+          data: visibleText,
+          selectable: _controller.isCompleted,
+          softLineBreak: true,
+          styleSheet: widget.styleSheet,
+          onTapLink: widget.onTapLink,
+        );
+      },
     );
   }
 }

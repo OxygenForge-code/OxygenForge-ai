@@ -153,6 +153,7 @@ class ChatMessage {
     this.provider,
     this.model,
     this.thinking,
+    this.thinkingDuration,
   });
 
   final String id;
@@ -162,6 +163,7 @@ class ChatMessage {
   final AiProvider? provider;
   final String? model;
   final String? thinking;
+  final Duration? thinkingDuration;
 
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -171,6 +173,7 @@ class ChatMessage {
         'provider': provider?.name,
         'model': model,
         'thinking': thinking,
+        'thinkingDurationMs': thinkingDuration?.inMilliseconds,
       };
 
   factory ChatMessage.fromJson(Map<String, dynamic> json) {
@@ -184,6 +187,9 @@ class ChatMessage {
       provider: json['provider'] is String ? aiProviderFromName(json['provider'] as String) : null,
       model: json['model'] as String?,
       thinking: json['thinking'] as String?,
+      thinkingDuration: json['thinkingDurationMs'] is num
+          ? Duration(milliseconds: (json['thinkingDurationMs'] as num).round())
+          : null,
     );
   }
 }

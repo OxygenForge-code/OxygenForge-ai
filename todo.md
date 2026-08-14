@@ -20,3 +20,9 @@
 - [x] Ana sohbet ekranına yüksek etkili, erişilebilir ve performanslı animasyonlar ekle
 - [x] Düşünme görünümü ve hareketli arayüz için regresyon testleri ekle
 - [x] Düşünme görünümü ve animasyonlar için release APK derle ve doğrula
+- [x] Model yanıt süresini ölçüp düşünme süresi olarak asistan mesajının üstünde göster
+- [x] Ani mesaj görünümünü aşamalı metin ve kart girişine dönüştür
+- [x] Sohbet yüzeylerini siyah-beyaz buzlu cam tasarım diliyle yenile
+- [x] Düşünme süresi, aşamalı giriş ve buzlu cam arayüz için regresyon testleri ekle
+- [x] Buzlu cam sohbet güncellemesi için release APK derle ve doğrula
+- [x] Kart sonrası metin açılış gecikmesini içeren release APK derle ve doğrula

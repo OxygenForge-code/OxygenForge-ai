@@ -68,3 +68,9 @@ Sağlayıcı yanıtlarında bulunan `<think>`, `<thinking>`, `<analysis>`, `<rea
 Mesajlar girişte kayma/sönme hareketiyle görünür. Düşünme paneli, başlık ve durum metinleri akıcı geçişler kullanır; yazıyor göstergesi nabız şeklinde çalışır. Hızlı aksiyonlar, oturum seçimi, bağlantı durumu ve oluşturucu alan basma, ölçek, ışık ve ikon geçişleriyle hareketlendirildi. Sistem seviyesinde hareket azaltma tercihi etkin olduğunda bu hareketler devre dışı kalır.
 
 `flutter analyze` temiz geçti ve toplam 14 test başarıyla tamamlandı. Final Android APK `versionName 1.4.3`, `versionCode 9` olarak üretildi. Paket içinde `INTERNET`, `RECORD_AUDIO` ve `CAMERA` izinleri doğrulandı; APK v2 imzası geçerli. SHA-256: `1e87cab856ca72f941109679ca0ada2182a5c014a91c05ab3ad8542f7e651abf`.
+
+## Düşünme süresi ve buzlu cam sohbet QA (1.4.4)
+
+Asistan yanıtı beklenirken geçen süre ölçülür ve `Düşündü` rozeti olarak mesaj kartının üstünde gösterilir. Bu süre sohbet geçmişinin JSON kaydında saklanır. Asistan yanıtı kartı girdikten sonra metin kısa bir gecikmeyle aşamalı biçimde görünür; önceki mesajlar kimlikleri üzerinden korunarak tekrar oynatılmaz.
+
+Sohbet mesajları ve ayar kartları siyah-beyaz buzlu cam panel yapısına geçirildi. Mesaj alanında ambient beyaz ışık lekeleri, yarı saydam koyu yüzeyler, beyaz cam kenarlar ve arka plan bulanıklığı kullanılır. Kartın görünmesinden sonra metin açılışı 150 ms gecikmeyle başlar. `flutter analyze` temiz geçti ve toplam 14 test başarıyla tamamlandı. Final Android APK `versionName 1.4.4`, `versionCode 10` olarak üretildi. Paket içinde `INTERNET`, `RECORD_AUDIO` ve `CAMERA` izinleri doğrulandı; APK v2 imzası geçerli. SHA-256: `d8ac2293ce0795f50b76c617c94f240925abeaef473cf06da6ceaac48f902314`.
