@@ -108,6 +108,25 @@ extension AiProviderLabel on AiProvider {
   bool get isOpenAiCompatible =>
       this != AiProvider.gemini && this != AiProvider.anthropic;
 
+  bool supportsVisionModel(String model) {
+    final normalized = model.toLowerCase();
+    switch (this) {
+      case AiProvider.gemini:
+      case AiProvider.anthropic:
+        return true;
+      case AiProvider.openai:
+        return normalized.contains('gpt-4o') || normalized.contains('gpt-4.1') || normalized.contains('vision');
+      case AiProvider.groq:
+        return normalized.contains('vision') || normalized.contains('llama-4');
+      case AiProvider.openRouter:
+      case AiProvider.mistral:
+      case AiProvider.together:
+      case AiProvider.deepSeek:
+      case AiProvider.custom:
+        return normalized.contains('vision') || normalized.contains('image') || normalized.contains('llama-4');
+    }
+  }
+
 }
 
 AiProvider aiProviderFromName(String? name) {
@@ -360,6 +379,7 @@ class AppSettings {
   String get systemPrompt => activeProfile.systemPrompt;
   String get effectiveEndpoint => activeProfile.effectiveEndpoint;
   String get effectiveModel => activeProfile.effectiveModel;
+  bool get supportsVision => provider.supportsVisionModel(effectiveModel);
 
   AppSettings copyWith({
     AiProvider? provider,

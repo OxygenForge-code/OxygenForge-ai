@@ -9,6 +9,7 @@ enum AiFailureKind {
   network,
   authentication,
   rateLimit,
+  visionUnsupported,
   invalidRequest,
   server,
   decoding,
@@ -36,6 +37,8 @@ class AiServiceException implements Exception {
         return 'API anahtarı kontrol edilmeli';
       case AiFailureKind.rateLimit:
         return 'Kullanım limiti aşıldı';
+      case AiFailureKind.visionUnsupported:
+        return 'Görsel için uyumlu model seçilmeli';
       case AiFailureKind.invalidRequest:
         return 'İstek kabul edilmedi';
       case AiFailureKind.server:
@@ -55,6 +58,8 @@ class AiServiceException implements Exception {
         return 'Seçili sağlayıcı için API anahtarının doğru ve aktif olduğundan emin ol.';
       case AiFailureKind.rateLimit:
         return 'Biraz bekleyip tekrar dene veya başka bir sağlayıcı/model seç.';
+      case AiFailureKind.visionUnsupported:
+        return 'Seçili profil için görsel destekleyen bir model seç veya Gemini, OpenAI ya da Anthropic profilini kullan.';
       case AiFailureKind.invalidRequest:
         return 'Model adını, endpoint’i ve sağlayıcının desteklediği parametreleri kontrol et.';
       case AiFailureKind.server:
@@ -95,6 +100,14 @@ class AiService {
     if (settings.apiKey.trim().isEmpty) {
       await Future<void>.delayed(const Duration(milliseconds: 650));
       return _demoReply(latestUserMessage.text, settings.provider);
+    }
+
+    if (attachment != null && !settings.supportsVision) {
+      throw AiServiceException(
+        kind: AiFailureKind.visionUnsupported,
+        provider: settings.provider,
+        message: '${settings.effectiveModel} modeli görsel içerik kabul etmiyor. Görsel analiz için bu profilin modelini değiştir veya görsel destekleyen başka bir profil seç.',
+      );
     }
 
     switch (settings.provider) {

@@ -48,3 +48,9 @@ Final Android release APK `versionName 1.3.0`, `versionCode 5` olarak üretildi.
 `AppSettings` çoklu `ApiProfile` listesi ve seçili profil kimliğiyle genişletildi. Her profil sağlayıcı, anahtar, endpoint, model, sıcaklık ve sistem promptu bilgilerini taşır. V2 ayarları profil listesine migrate edilir. Ayar ekranı profil ekleme, düzenleme, silme, seçme ve gerçek bağlantı testi sağlar.
 
 Final Android release APK `versionName 1.4.0`, `versionCode 6` olarak üretildi. `flutter analyze` temiz geçti ve 8 test başarıyla tamamlandı. Paket içinde `INTERNET`, `RECORD_AUDIO` ve `CAMERA` izinleri bulunuyor; APK v2 imzası doğrulandı. SHA-256: `564c4816699ea9b90e9abbbb4c9833013c3c18838f7994609a742f56dc6b58b4`.
+
+## Görsel model uyumluluğu QA (1.4.1)
+
+Görsel attachment gönderilmeden önce seçili sağlayıcı ve modelin görüntü desteği denetlenir. Groq içinde `llama-3.3-70b-versatile` gibi metin odaklı modeller ağ isteği yapılmadan engellenir; kullanıcı, tekrar denemek yerine doğrudan görsel destekleyen model seçimine yönlendirilir. Groq `llama-3.2-11b-vision-preview` gibi uyumlu modeller için istek gövdesi OpenAI uyumlu çok parçalı `content` alanıyla üretilir.
+
+`flutter analyze` temiz geçti ve toplam 10 test başarıyla tamamlandı. Final Android APK `versionName 1.4.1`, `versionCode 7` olarak üretildi. Paket içinde `INTERNET`, `RECORD_AUDIO` ve `CAMERA` izinleri doğrulandı; APK v2 imzası geçerli. SHA-256: `b360f253482e79d0b85a9ea61712b561e91a80894bf1863ea13b7a15f92d2a8c`.

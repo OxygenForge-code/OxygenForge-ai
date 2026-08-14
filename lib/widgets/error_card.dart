@@ -17,6 +17,7 @@ class ErrorCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final needsVisionModel = exception.kind == AiFailureKind.visionUnsupported;
     return Padding(
       padding: const EdgeInsets.only(bottom: 24),
       child: GlassCard(
@@ -72,35 +73,50 @@ class ErrorCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 18),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: onSettings,
-                    icon: const Icon(Icons.tune_rounded, size: 16),
-                    label: const Text('Ayarları kontrol et'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: OxygenForgeTheme.text,
-                      side: const BorderSide(color: OxygenForgeTheme.line),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                    ),
+            if (needsVisionModel)
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: onSettings,
+                  icon: const Icon(Icons.auto_awesome_rounded, size: 16),
+                  label: const Text('Görsel destekleyen model seç'),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: OxygenForgeTheme.violet,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: FilledButton.icon(
-                    onPressed: onRetry,
-                    icon: const Icon(Icons.refresh_rounded, size: 16),
-                    label: const Text('Tekrar dene'),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: OxygenForgeTheme.error.withValues(alpha: 0.8),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
+              )
+            else
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: onSettings,
+                      icon: const Icon(Icons.tune_rounded, size: 16),
+                      label: const Text('Ayarları kontrol et'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: OxygenForgeTheme.text,
+                        side: const BorderSide(color: OxygenForgeTheme.line),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
                     ),
                   ),
-                ),
-              ],
-            ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: FilledButton.icon(
+                      onPressed: onRetry,
+                      icon: const Icon(Icons.refresh_rounded, size: 16),
+                      label: const Text('Tekrar dene'),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: OxygenForgeTheme.error.withValues(alpha: 0.8),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
           ],
         ),
       ),
