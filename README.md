@@ -100,3 +100,11 @@ Sohbet başlığında aktif sağlayıcı ve model görünür. Son AI yanıtı te
 Arayüz Material 3 tema tokenları, yüzey katmanları, `CardThemeData`, modern butonlar, alt sayfalar, snackbar ve bağlantı kartlarıyla yenilenmiştir. Sağlayıcı bağlantısı başarısız olduğunda uygulama artık ham exception metnini tek satırlık snackbar'a sıkıştırmak yerine hatayı sınıflandırılmış bir kartta gösterir.
 
 Groq ekran görüntüsündeki `SocketFailed` ve `Failed host lookup` durumu artık **Bağlantı kurulamadı** başlığıyla, DNS/internet kontrol önerisiyle ve **Tekrar dene** / **Ayarları kontrol et** aksiyonlarıyla gösterilir. Kimlik doğrulama, rate limit, geçersiz istek, sunucu ve JSON çözümleme hataları da ayrı kullanıcı mesajlarına ayrılır.
+
+## Sade sohbet deneyimi ve zengin içerik
+
+AI ve kullanıcı mesajları artık gerçek Markdown olarak render edilir. `**kalın**`, `*italik*`, başlıklar, sıralı/sırasız listeler, alıntılar, inline kod ve kod blokları ham karakter olarak görünmez; uygulama içinde tipografik olarak biçimlendirilir. Bağlantılar dokunulduğunda panoya kopyalanır ve asistan yanıtları Markdown olarak kopyalanabilir.
+
+Composer sadeleştirildi. Sağlayıcılar, kamera ve galeriden görsel seçme hızlı aksiyon çipleriyle erişilebilir; mikrofon düğmesi Türkçe sesli girişi metne dönüştürür. Seçilen görseller OpenAI uyumlu vision formatına, Gemini `inlineData` formatına veya Anthropic base64 image formatına çevrilerek ilgili sağlayıcıya gönderilir. Görsel tek başına gönderilirse varsayılan talimat `Bu görseli analiz et.` olur.
+
+Android için internet, kamera ve mikrofon izinleri; iOS için mikrofon, kamera ve fotoğraf kütüphanesi kullanım açıklamaları tanımlanmıştır.

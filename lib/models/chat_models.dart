@@ -117,6 +117,14 @@ AiProvider aiProviderFromName(String? name) {
   );
 }
 
+class AiAttachment {
+  const AiAttachment({required this.name, required this.mimeType, required this.base64Data});
+
+  final String name;
+  final String mimeType;
+  final String base64Data;
+}
+
 class ChatMessage {
   const ChatMessage({
     required this.id,

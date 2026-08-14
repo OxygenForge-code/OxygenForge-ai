@@ -11,6 +11,6 @@ void main() {
 
     expect(find.text('Fikrini ateşle.'), findsOneWidget);
     expect(find.text('Yeni çalışma'), findsOneWidget);
-    expect(find.text('OxygenForge AI\'ya bir şey sor…'), findsOneWidget);
+    expect(find.text('OxygenForge AI\'ya sor…'), findsOneWidget);
   });
 }

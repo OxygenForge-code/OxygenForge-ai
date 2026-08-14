@@ -1,5 +1,9 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
 
 import '../app_theme.dart';
 import '../models/chat_models.dart';
@@ -23,12 +27,16 @@ class _HomeScreenState extends State<HomeScreen> {
   final _composerController = TextEditingController();
   final _composerFocusNode = FocusNode();
   final _scrollController = ScrollController();
+  final _imagePicker = ImagePicker();
+  final _speech = stt.SpeechToText();
 
   List<ChatSession> _sessions = <ChatSession>[];
   AppSettings _settings = const AppSettings();
   String? _selectedSessionId;
   bool _isLoading = true;
   bool _isTyping = false;
+  bool _isListening = false;
+  AiAttachment? _attachment;
   AiServiceException? _lastError;
 
   ChatSession? get _selectedSession {
@@ -88,7 +96,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _sendMessage() async {
-    final prompt = _composerController.text.trim();
+    final selectedAttachment = _attachment;
+    final typedPrompt = _composerController.text.trim();
+    final prompt = typedPrompt.isEmpty && selectedAttachment != null ? 'Bu görseli analiz et.' : typedPrompt;
     final session = _selectedSession ?? _createAndSelectSession();
     if (prompt.isEmpty || _isTyping) return;
 
@@ -106,6 +116,7 @@ class _HomeScreenState extends State<HomeScreen> {
       );
       session.updatedAt = DateTime.now();
       _composerController.clear();
+      _attachment = null;
       _isTyping = true;
     });
     await _store.saveSessions(_sessions);
@@ -115,6 +126,7 @@ class _HomeScreenState extends State<HomeScreen> {
       final response = await _aiService.reply(
         history: List<ChatMessage>.of(session.messages),
         settings: _settings,
+        attachment: selectedAttachment,
       );
       if (!mounted) return;
       setState(() {
@@ -230,6 +242,75 @@ class _HomeScreenState extends State<HomeScreen> {
     _composerController.text = prompt;
     _composerController.selection = TextSelection.collapsed(offset: prompt.length);
     _composerFocusNode.requestFocus();
+  }
+
+  Future<void> _pickImage(ImageSource source) async {
+    final picked = await _imagePicker.pickImage(
+      source: source,
+      imageQuality: 82,
+      maxWidth: 1600,
+    );
+    if (picked == null) return;
+    try {
+      final bytes = await picked.readAsBytes();
+      if (!mounted) return;
+      setState(() {
+        _attachment = AiAttachment(
+          name: picked.name,
+          mimeType: picked.mimeType ?? 'image/jpeg',
+          base64Data: base64Encode(bytes),
+        );
+      });
+      _composerFocusNode.requestFocus();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${picked.name} eklendi. İstersen bir talimat yazıp gönder.')),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Görsel okunamadı: $error')),
+      );
+    }
+  }
+
+  Future<void> _toggleVoice() async {
+    if (_isListening) {
+      await _speech.stop();
+      if (mounted) setState(() => _isListening = false);
+      return;
+    }
+
+    final available = await _speech.initialize(
+      onStatus: (status) {
+        if (status == 'notListening' && mounted) setState(() => _isListening = false);
+      },
+      onError: (error) {
+        if (!mounted) return;
+        setState(() => _isListening = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Sesli giriş kullanılamıyor: ${error.errorMsg}')),
+        );
+      },
+    );
+    if (!available) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Bu cihazda sesli giriş kullanılamıyor veya mikrofon izni verilmedi.')),
+      );
+      return;
+    }
+    if (!mounted) return;
+    setState(() => _isListening = true);
+    await _speech.listen(
+      listenOptions: stt.SpeechListenOptions(localeId: 'tr_TR', listenMode: stt.ListenMode.dictation),
+      onResult: (result) {
+        if (!mounted) return;
+        setState(() {
+          _composerController.text = result.recognizedWords;
+          _composerController.selection = TextSelection.collapsed(offset: _composerController.text.length);
+        });
+      },
+    );
   }
 
   Future<void> _exportCurrentSession() async {
@@ -431,11 +512,21 @@ class _HomeScreenState extends State<HomeScreen> {
           onRegenerate: _regenerateLast,
         ),
         Expanded(child: _buildConversation(session)),
+        _QuickActions(
+          onProviders: _openSettings,
+          onCamera: () => _pickImage(ImageSource.camera),
+          onGallery: () => _pickImage(ImageSource.gallery),
+        ),
         _Composer(
           controller: _composerController,
           focusNode: _composerFocusNode,
           isTyping: _isTyping,
+          isListening: _isListening,
+          attachmentName: _attachment?.name,
           onSend: _sendMessage,
+          onGallery: () => _pickImage(ImageSource.gallery),
+          onVoice: _toggleVoice,
+          onClearAttachment: () => setState(() => _attachment = null),
         ),
       ],
     );
@@ -720,67 +811,160 @@ class _PrivacyNote extends StatelessWidget {
   }
 }
 
+class _QuickActions extends StatelessWidget {
+  const _QuickActions({required this.onProviders, required this.onCamera, required this.onGallery});
+
+  final VoidCallback onProviders;
+  final VoidCallback onCamera;
+  final VoidCallback onGallery;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 48,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
+        children: [
+          _QuickActionChip(icon: Icons.hub_rounded, label: 'Sağlayıcılar', onPressed: onProviders),
+          const SizedBox(width: 8),
+          _QuickActionChip(icon: Icons.camera_alt_rounded, label: 'Kamera', onPressed: onCamera),
+          const SizedBox(width: 8),
+          _QuickActionChip(icon: Icons.photo_library_rounded, label: 'Görsel seç', onPressed: onGallery),
+        ],
+      ),
+    );
+  }
+}
+
+class _QuickActionChip extends StatelessWidget {
+  const _QuickActionChip({required this.icon, required this.label, required this.onPressed});
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return ActionChip(
+      onPressed: onPressed,
+      avatar: Icon(icon, size: 17, color: OxygenForgeTheme.text),
+      label: Text(label),
+      labelStyle: const TextStyle(color: OxygenForgeTheme.text, fontSize: 12.5, fontWeight: FontWeight.w600),
+      backgroundColor: OxygenForgeTheme.panelRaised,
+      side: const BorderSide(color: OxygenForgeTheme.line),
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 8),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+    );
+  }
+}
+
 class _Composer extends StatelessWidget {
   const _Composer({
     required this.controller,
     required this.focusNode,
     required this.isTyping,
+    required this.isListening,
+    required this.attachmentName,
     required this.onSend,
+    required this.onGallery,
+    required this.onVoice,
+    required this.onClearAttachment,
   });
 
   final TextEditingController controller;
   final FocusNode focusNode;
   final bool isTyping;
+  final bool isListening;
+  final String? attachmentName;
   final VoidCallback onSend;
+  final VoidCallback onGallery;
+  final VoidCallback onVoice;
+  final VoidCallback onClearAttachment;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 8, 24, 20),
+      padding: const EdgeInsets.fromLTRB(24, 4, 24, 20),
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 820),
         child: Container(
           decoration: BoxDecoration(
             color: OxygenForgeTheme.panelRaised,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: OxygenForgeTheme.line),
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: isListening ? OxygenForgeTheme.violetBright : OxygenForgeTheme.line),
             boxShadow: const [BoxShadow(color: Color(0x40000000), blurRadius: 24, offset: Offset(0, 7))],
           ),
-          padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
+          padding: const EdgeInsets.fromLTRB(8, 7, 8, 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Expanded(
-                child: TextField(
-                  controller: controller,
-                  focusNode: focusNode,
-                  minLines: 1,
-                  maxLines: 5,
-                  textInputAction: TextInputAction.newline,
-                  onSubmitted: (_) => onSend(),
-                  style: const TextStyle(fontSize: 14),
-                  decoration: const InputDecoration(
-                    filled: false,
-                    hintText: 'OxygenForge AI\'ya bir şey sor…',
-                    border: InputBorder.none,
-                    enabledBorder: InputBorder.none,
-                    focusedBorder: InputBorder.none,
-                    contentPadding: EdgeInsets.symmetric(vertical: 10),
+              if (attachmentName != null)
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 6, bottom: 4),
+                    child: InputChip(
+                      avatar: const Icon(Icons.image_rounded, size: 16, color: OxygenForgeTheme.violetBright),
+                      label: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 200),
+                        child: Text(attachmentName!, overflow: TextOverflow.ellipsis),
+                      ),
+                      onDeleted: onClearAttachment,
+                      deleteIconColor: OxygenForgeTheme.muted,
+                      backgroundColor: OxygenForgeTheme.violet.withValues(alpha: 0.12),
+                      side: BorderSide.none,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              IconButton(
-                onPressed: isTyping ? null : onSend,
-                tooltip: 'Gönder',
-                style: IconButton.styleFrom(
-                  backgroundColor: OxygenForgeTheme.violet,
-                  foregroundColor: Colors.white,
-                  disabledBackgroundColor: OxygenForgeTheme.line,
-                  disabledForegroundColor: OxygenForgeTheme.muted,
-                  padding: const EdgeInsets.all(12),
-                ),
-                icon: Icon(isTyping ? Icons.hourglass_top_rounded : Icons.arrow_upward_rounded, size: 19),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  IconButton(
+                    onPressed: isTyping ? null : onGallery,
+                    tooltip: 'Görsel ekle',
+                    icon: const Icon(Icons.add_rounded, size: 26, color: OxygenForgeTheme.text),
+                  ),
+                  Expanded(
+                    child: TextField(
+                      controller: controller,
+                      focusNode: focusNode,
+                      minLines: 1,
+                      maxLines: 5,
+                      textInputAction: TextInputAction.newline,
+                      onSubmitted: (_) => onSend(),
+                      style: const TextStyle(fontSize: 14),
+                      decoration: const InputDecoration(
+                        filled: false,
+                        hintText: 'OxygenForge AI\'ya sor…',
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        contentPadding: EdgeInsets.symmetric(vertical: 10),
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: isTyping ? null : onVoice,
+                    tooltip: isListening ? 'Dinlemeyi durdur' : 'Sesli giriş',
+                    icon: Icon(
+                      isListening ? Icons.mic_rounded : Icons.mic_none_rounded,
+                      color: isListening ? OxygenForgeTheme.violetBright : OxygenForgeTheme.muted,
+                    ),
+                  ),
+                  IconButton.filled(
+                    onPressed: isTyping ? null : onSend,
+                    tooltip: 'Gönder',
+                    style: IconButton.styleFrom(
+                      backgroundColor: OxygenForgeTheme.violet,
+                      foregroundColor: Colors.white,
+                      disabledBackgroundColor: OxygenForgeTheme.line,
+                      disabledForegroundColor: OxygenForgeTheme.muted,
+                      padding: const EdgeInsets.all(12),
+                    ),
+                    icon: Icon(isTyping ? Icons.hourglass_top_rounded : Icons.arrow_upward_rounded, size: 19),
+                  ),
+                ],
               ),
             ],
           ),

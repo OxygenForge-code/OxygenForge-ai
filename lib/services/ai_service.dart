@@ -80,6 +80,7 @@ class AiService {
   Future<String> reply({
     required List<ChatMessage> history,
     required AppSettings settings,
+    AiAttachment? attachment,
   }) async {
     final latestUserMessage = history.lastWhere(
       (message) => message.role == MessageRole.user,
@@ -98,9 +99,9 @@ class AiService {
 
     switch (settings.provider) {
       case AiProvider.gemini:
-        return _replyWithGemini(history: history, settings: settings);
+        return _replyWithGemini(history: history, settings: settings, attachment: attachment);
       case AiProvider.anthropic:
-        return _replyWithAnthropic(history: history, settings: settings);
+        return _replyWithAnthropic(history: history, settings: settings, attachment: attachment);
       case AiProvider.openai:
       case AiProvider.groq:
       case AiProvider.openRouter:
@@ -108,7 +109,7 @@ class AiService {
       case AiProvider.together:
       case AiProvider.deepSeek:
       case AiProvider.custom:
-        return _replyWithOpenAiCompatible(history: history, settings: settings);
+        return _replyWithOpenAiCompatible(history: history, settings: settings, attachment: attachment);
     }
   }
 
@@ -158,6 +159,7 @@ class AiService {
   Future<String> _replyWithOpenAiCompatible({
     required List<ChatMessage> history,
     required AppSettings settings,
+    AiAttachment? attachment,
   }) async {
     final uri = _parseUri(settings.effectiveEndpoint, settings);
     final response = await _post(
@@ -176,7 +178,7 @@ class AiService {
         'temperature': settings.temperature,
         'messages': [
           {'role': 'system', 'content': settings.systemPrompt},
-          ..._compatibleMessages(history),
+          ..._compatibleMessages(history, attachment: attachment),
         ],
       },
     );
@@ -195,6 +197,7 @@ class AiService {
   Future<String> _replyWithGemini({
     required List<ChatMessage> history,
     required AppSettings settings,
+    AiAttachment? attachment,
   }) async {
     final endpoint = settings.effectiveEndpoint.endsWith('/')
         ? settings.effectiveEndpoint.substring(0, settings.effectiveEndpoint.length - 1)
@@ -214,16 +217,24 @@ class AiService {
             {'text': settings.systemPrompt},
           ],
         },
-        'contents': history
-            .map(
-              (message) => {
-                'role': message.role == MessageRole.user ? 'user' : 'model',
-                'parts': [
-                  {'text': message.text},
-                ],
+        'contents': history.asMap().entries.map((entry) {
+          final message = entry.value;
+          final parts = <Map<String, dynamic>>[
+            {'text': message.text},
+          ];
+          if (attachment != null && entry.key == history.length - 1 && message.role == MessageRole.user) {
+            parts.add({
+              'inlineData': {
+                'mimeType': attachment.mimeType,
+                'data': attachment.base64Data,
               },
-            )
-            .toList(),
+            });
+          }
+          return {
+            'role': message.role == MessageRole.user ? 'user' : 'model',
+            'parts': parts,
+          };
+        }).toList(),
         'generationConfig': {'temperature': settings.temperature},
       },
     );
@@ -250,6 +261,7 @@ class AiService {
   Future<String> _replyWithAnthropic({
     required List<ChatMessage> history,
     required AppSettings settings,
+    AiAttachment? attachment,
   }) async {
     final response = await _post(
       uri: _parseUri(settings.effectiveEndpoint, settings),
@@ -264,14 +276,29 @@ class AiService {
         'max_tokens': 2048,
         'temperature': settings.temperature,
         'system': settings.systemPrompt,
-        'messages': history
-            .map(
-              (message) => {
-                'role': message.role == MessageRole.user ? 'user' : 'assistant',
-                'content': message.text,
-              },
-            )
-            .toList(),
+        'messages': history.asMap().entries.map((entry) {
+          final message = entry.value;
+          if (attachment != null && entry.key == history.length - 1 && message.role == MessageRole.user) {
+            return {
+              'role': 'user',
+              'content': [
+                {'type': 'text', 'text': message.text},
+                {
+                  'type': 'image',
+                  'source': {
+                    'type': 'base64',
+                    'media_type': attachment.mimeType,
+                    'data': attachment.base64Data,
+                  },
+                },
+              ],
+            };
+          }
+          return {
+            'role': message.role == MessageRole.user ? 'user' : 'assistant',
+            'content': message.text,
+          };
+        }).toList(),
       },
     );
 
@@ -294,15 +321,26 @@ class AiService {
     );
   }
 
-  List<Map<String, String>> _compatibleMessages(List<ChatMessage> history) {
-    return history
-        .map(
-          (message) => {
-            'role': message.role == MessageRole.user ? 'user' : 'assistant',
-            'content': message.text,
-          },
-        )
-        .toList();
+  List<Map<String, dynamic>> _compatibleMessages(List<ChatMessage> history, {AiAttachment? attachment}) {
+    return history.asMap().entries.map((entry) {
+      final message = entry.value;
+      if (attachment != null && entry.key == history.length - 1 && message.role == MessageRole.user) {
+        return {
+          'role': 'user',
+          'content': [
+            {'type': 'text', 'text': message.text},
+            {
+              'type': 'image_url',
+              'image_url': {'url': 'data:${attachment.mimeType};base64,${attachment.base64Data}'},
+            },
+          ],
+        };
+      }
+      return {
+        'role': message.role == MessageRole.user ? 'user' : 'assistant',
+        'content': message.text,
+      };
+    }).toList();
   }
 
   Uri _parseUri(String endpoint, AppSettings settings) {
