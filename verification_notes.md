@@ -42,3 +42,9 @@ Release build sırasında sandbox belleğine uygun Gradle ayarları kullanıldı
 Mobil compact görünüm referanstaki siyah ve sade kompozisyona dönüştürüldü. Üstte dairesel menü düğmesi, sağlayıcı API pill’i ve tek dairesel bağlantı aksiyonu bulunur. Boş çalışma alanında karşılama kartları gizlenir; altta `Try Connectors`, `Open Camera`, `Choose Image` çipleri ve büyük `Ask OxygenForge AI…` composer görünür.
 
 Final Android release APK `versionName 1.3.0`, `versionCode 5` olarak üretildi. `INTERNET`, `RECORD_AUDIO` ve `CAMERA` izinleri pakette doğrulandı. APK v2 imzası geçerli. SHA-256: `0ce477f3c8b3c70cfa9f0ab084309829452cd5d7e0d94ddf86b9a368da7abeb0`.
+
+## Çoklu API profil QA
+
+`AppSettings` çoklu `ApiProfile` listesi ve seçili profil kimliğiyle genişletildi. Her profil sağlayıcı, anahtar, endpoint, model, sıcaklık ve sistem promptu bilgilerini taşır. V2 ayarları profil listesine migrate edilir. Ayar ekranı profil ekleme, düzenleme, silme, seçme ve gerçek bağlantı testi sağlar.
+
+Final Android release APK `versionName 1.4.0`, `versionCode 6` olarak üretildi. `flutter analyze` temiz geçti ve 8 test başarıyla tamamlandı. Paket içinde `INTERNET`, `RECORD_AUDIO` ve `CAMERA` izinleri bulunuyor; APK v2 imzası doğrulandı. SHA-256: `564c4816699ea9b90e9abbbb4c9833013c3c18838f7994609a742f56dc6b58b4`.

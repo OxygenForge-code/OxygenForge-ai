@@ -209,7 +209,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (!mounted) return;
     setState(() => _settings = next);
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('${next.provider.label} bağlantısı kaydedildi.')),
+      SnackBar(content: Text('API profilleri kaydedildi. Aktif: ${next.activeProfile.name}')),
     );
   }
 
@@ -505,6 +505,7 @@ class _HomeScreenState extends State<HomeScreen> {
           isCompact: isCompact,
           minimal: isCompact,
           title: session?.title ?? 'Yeni çalışma',
+          profileName: _settings.activeProfile.name,
           model: _settings.effectiveModel,
           provider: _settings.provider,
           connected: _settings.apiKey.isNotEmpty,
@@ -568,6 +569,7 @@ class _WorkspaceHeader extends StatelessWidget {
     required this.isCompact,
     required this.minimal,
     required this.title,
+    required this.profileName,
     required this.model,
     required this.provider,
     required this.connected,
@@ -579,6 +581,7 @@ class _WorkspaceHeader extends StatelessWidget {
   final bool isCompact;
   final bool minimal;
   final String title;
+  final String profileName;
   final String model;
   final AiProvider provider;
   final bool connected;
@@ -589,7 +592,7 @@ class _WorkspaceHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (minimal) {
-      return _MinimalHeader(provider: provider, onSettings: onSettings);
+      return _MinimalHeader(profileName: profileName, onSettings: onSettings);
     }
     return Container(
       height: 76,
@@ -654,9 +657,9 @@ class _WorkspaceHeader extends StatelessWidget {
 }
 
 class _MinimalHeader extends StatelessWidget {
-  const _MinimalHeader({required this.provider, required this.onSettings});
+  const _MinimalHeader({required this.profileName, required this.onSettings});
 
-  final AiProvider provider;
+  final String profileName;
   final VoidCallback onSettings;
 
   @override
@@ -681,16 +684,31 @@ class _MinimalHeader extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 12),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 11),
-              decoration: BoxDecoration(
-                color: const Color(0xFF202020),
-                borderRadius: BorderRadius.circular(28),
-                border: Border.all(color: const Color(0xFF3A3A3A)),
-              ),
-              child: Text(
-                '${provider.label} API',
-                style: const TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w500),
+            InkWell(
+              onTap: onSettings,
+              borderRadius: BorderRadius.circular(28),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 11),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF202020),
+                  borderRadius: BorderRadius.circular(28),
+                  border: Border.all(color: const Color(0xFF3A3A3A)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        profileName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w500),
+                      ),
+                    ),
+                    const SizedBox(width: 5),
+                    const Icon(Icons.expand_more_rounded, color: OxygenForgeTheme.muted, size: 18),
+                  ],
+                ),
               ),
             ),
             const Spacer(),

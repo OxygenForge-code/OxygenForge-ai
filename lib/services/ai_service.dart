@@ -113,6 +113,31 @@ class AiService {
     }
   }
 
+  Future<void> testProfile(ApiProfile profile) async {
+    if (!profile.isReady) {
+      throw AiServiceException(
+        kind: AiFailureKind.authentication,
+        provider: profile.provider,
+        message: 'Bu profil için API anahtarı girilmedi.',
+      );
+    }
+    final settings = AppSettings(
+      profiles: <ApiProfile>[profile],
+      selectedProfileId: profile.id,
+    );
+    await reply(
+      history: <ChatMessage>[
+        ChatMessage(
+          id: 'connection-test',
+          role: MessageRole.user,
+          text: 'Reply with OK.',
+          createdAt: DateTime.now(),
+        ),
+      ],
+      settings: settings,
+    );
+  }
+
   Future<http.Response> _post({
     required Uri uri,
     required Map<String, String> headers,

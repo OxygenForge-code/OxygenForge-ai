@@ -114,3 +114,9 @@ Android için internet, kamera ve mikrofon izinleri; iOS için mikrofon, kamera 
 Mobil compact görünüm referans tasarıma göre sadeleştirilmiştir. Üst barda dairesel menü düğmesi, `Groq API` benzeri aktif sağlayıcı pill’i ve tek dairesel bağlantı düğmesi bulunur. Boş çalışma alanında büyük karşılama kartları gösterilmez; dikkat alt hızlı aksiyonlara ve composer’a bırakılır.
 
 Alt bölümde `Try Connectors`, `Open Camera` ve `Choose Image` çipleri bulunur. Composer, `+` görsel ekleme, mikrofon ve büyük dairesel gönderme düğmesiyle tek satırlı ve odaklı bir kullanım sunar.
+
+## Çoklu API profilleri
+
+Her sağlayıcı için tek anahtar saklamak yerine birden fazla bağımsız API profili oluşturabilirsin. Her profil kendi sağlayıcısını, profil adını, API anahtarını, endpoint'ini, modelini, sıcaklık ayarını ve sistem promptunu taşır. Profiller cihazdaki yerel depoda kalıcı olarak tutulur; seçilen profil uygulamanın aktif sağlayıcısı olur.
+
+`API profilleri` ekranından yeni profil ekleyebilir, düzenleyebilir, silebilir, aktif profilini değiştirebilir ve kısa bir istek göndererek bağlantıyı test edebilirsin. Eski tek sağlayıcılı ayarlar açılışta otomatik olarak ayrı profil kayıtlarına dönüştürülür.

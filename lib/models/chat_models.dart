@@ -205,26 +205,161 @@ class ChatSession {
   }
 }
 
-class AppSettings {
-  const AppSettings({
-    this.provider = AiProvider.openai,
-    this.apiKeys = const <String, String>{},
+class ApiProfile {
+  const ApiProfile({
+    required this.id,
+    required this.name,
+    required this.provider,
+    this.apiKey = '',
     this.endpoint = '',
     this.model = '',
     this.temperature = 0.7,
-    this.systemPrompt = 'You are OxygenForge AI, a concise, helpful assistant. Respond in the user\'s language.',
+    this.systemPrompt = AppSettings.defaultSystemPrompt,
+    required this.createdAt,
+    required this.updatedAt,
   });
 
+  ApiProfile.legacy({
+    required AiProvider provider,
+    required Map<String, String> apiKeys,
+    required this.endpoint,
+    required this.model,
+    required this.temperature,
+    required this.systemPrompt,
+  })  : id = 'legacy',
+        name = 'Varsayılan ${provider.label}',
+        provider = provider,
+        apiKey = apiKeys[provider.name] ?? '',
+        createdAt = DateTime.fromMillisecondsSinceEpoch(0),
+        updatedAt = DateTime.fromMillisecondsSinceEpoch(0);
+
+  final String id;
+  final String name;
   final AiProvider provider;
-  final Map<String, String> apiKeys;
+  final String apiKey;
   final String endpoint;
   final String model;
   final double temperature;
   final String systemPrompt;
+  final DateTime createdAt;
+  final DateTime updatedAt;
 
-  String get apiKey => apiKeys[provider.name] ?? '';
   String get effectiveEndpoint => endpoint.trim().isEmpty ? provider.defaultEndpoint : endpoint.trim();
   String get effectiveModel => model.trim().isEmpty ? provider.defaultModel : model.trim();
+  bool get isReady => apiKey.trim().isNotEmpty;
+
+  ApiProfile copyWith({
+    String? name,
+    AiProvider? provider,
+    String? apiKey,
+    String? endpoint,
+    String? model,
+    double? temperature,
+    String? systemPrompt,
+    DateTime? updatedAt,
+  }) {
+    return ApiProfile(
+      id: id,
+      name: name ?? this.name,
+      provider: provider ?? this.provider,
+      apiKey: apiKey ?? this.apiKey,
+      endpoint: endpoint ?? this.endpoint,
+      model: model ?? this.model,
+      temperature: temperature ?? this.temperature,
+      systemPrompt: systemPrompt ?? this.systemPrompt,
+      createdAt: createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'name': name,
+        'provider': provider.name,
+        'apiKey': apiKey,
+        'endpoint': endpoint,
+        'model': model,
+        'temperature': temperature,
+        'systemPrompt': systemPrompt,
+        'createdAt': createdAt.toIso8601String(),
+        'updatedAt': updatedAt.toIso8601String(),
+      };
+
+  factory ApiProfile.fromJson(Map<String, dynamic> json) {
+    final now = DateTime.now();
+    final provider = aiProviderFromName(json['provider'] as String?);
+    return ApiProfile(
+      id: json['id'] as String? ?? now.microsecondsSinceEpoch.toString(),
+      name: json['name'] as String? ?? provider.label,
+      provider: provider,
+      apiKey: json['apiKey'] as String? ?? '',
+      endpoint: json['endpoint'] as String? ?? '',
+      model: json['model'] as String? ?? '',
+      temperature: (json['temperature'] as num?)?.toDouble() ?? 0.7,
+      systemPrompt: json['systemPrompt'] as String? ?? AppSettings.defaultSystemPrompt,
+      createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ?? now,
+      updatedAt: DateTime.tryParse(json['updatedAt'] as String? ?? '') ?? now,
+    );
+  }
+}
+
+class AppSettings {
+  const AppSettings({
+    AiProvider provider = AiProvider.openai,
+    Map<String, String> apiKeys = const <String, String>{},
+    String endpoint = '',
+    String model = '',
+    double temperature = 0.7,
+    String systemPrompt = defaultSystemPrompt,
+    this.profiles = const <ApiProfile>[],
+    this.selectedProfileId,
+  })  : _legacyProvider = provider,
+        _legacyApiKeys = apiKeys,
+        _legacyEndpoint = endpoint,
+        _legacyModel = model,
+        _legacyTemperature = temperature,
+        _legacySystemPrompt = systemPrompt;
+
+  static const defaultSystemPrompt = 'You are OxygenForge AI, a concise, helpful assistant. Respond in the user\'s language.';
+
+  final AiProvider _legacyProvider;
+  final Map<String, String> _legacyApiKeys;
+  final String _legacyEndpoint;
+  final String _legacyModel;
+  final double _legacyTemperature;
+  final String _legacySystemPrompt;
+
+  final List<ApiProfile> profiles;
+  final String? selectedProfileId;
+
+  bool get hasProfiles => profiles.isNotEmpty;
+
+  ApiProfile get activeProfile {
+    for (final profile in profiles) {
+      if (profile.id == selectedProfileId) return profile;
+    }
+    if (profiles.isNotEmpty) return profiles.first;
+    return ApiProfile.legacy(
+      provider: _legacyProvider,
+      apiKeys: _legacyApiKeys,
+      endpoint: _legacyEndpoint,
+      model: _legacyModel,
+      temperature: _legacyTemperature,
+      systemPrompt: _legacySystemPrompt,
+    );
+  }
+
+  AiProvider get provider => activeProfile.provider;
+  Map<String, String> get apiKeys => hasProfiles
+      ? {for (final profile in profiles) profile.id: profile.apiKey}
+      : _legacyApiKeys;
+  String get apiKey => activeProfile.apiKey;
+  String get endpoint => activeProfile.endpoint;
+  String get model => activeProfile.model;
+  double get temperature => activeProfile.temperature;
+  String get systemPrompt => activeProfile.systemPrompt;
+  String get effectiveEndpoint => activeProfile.effectiveEndpoint;
+  String get effectiveModel => activeProfile.effectiveModel;
 
   AppSettings copyWith({
     AiProvider? provider,
@@ -233,14 +368,25 @@ class AppSettings {
     String? model,
     double? temperature,
     String? systemPrompt,
+    List<ApiProfile>? profiles,
+    String? selectedProfileId,
   }) {
     return AppSettings(
-      provider: provider ?? this.provider,
-      apiKeys: apiKeys ?? this.apiKeys,
-      endpoint: endpoint ?? this.endpoint,
-      model: model ?? this.model,
-      temperature: temperature ?? this.temperature,
-      systemPrompt: systemPrompt ?? this.systemPrompt,
+      provider: provider ?? _legacyProvider,
+      apiKeys: apiKeys ?? _legacyApiKeys,
+      endpoint: endpoint ?? _legacyEndpoint,
+      model: model ?? _legacyModel,
+      temperature: temperature ?? _legacyTemperature,
+      systemPrompt: systemPrompt ?? _legacySystemPrompt,
+      profiles: profiles ?? this.profiles,
+      selectedProfileId: selectedProfileId ?? this.selectedProfileId,
+    );
+  }
+
+  AppSettings withProfiles(List<ApiProfile> nextProfiles, {String? activeProfileId}) {
+    return AppSettings(
+      profiles: List<ApiProfile>.unmodifiable(nextProfiles),
+      selectedProfileId: activeProfileId ?? selectedProfileId,
     );
   }
 }
