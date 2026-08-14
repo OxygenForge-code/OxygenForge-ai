@@ -74,7 +74,7 @@ void main() {
 
     final messages = payload!['messages'] as List<dynamic>;
     final content = (messages.last as Map<String, dynamic>)['content'];
-    expect(reply, 'Görsel işlendi.');
+    expect(reply.text, 'Görsel işlendi.');
     expect(content, isA<List<dynamic>>());
     expect((content as List<dynamic>).last['type'], 'image_url');
   });

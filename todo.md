@@ -15,3 +15,8 @@
 - [x] Tüm Flutter arayüz renklerini saf siyah-beyaz temaya dönüştür
 - [x] Yanıt filtresi ve siyah-beyaz tema için regresyon testleri ekle
 - [x] Siyah-beyaz tema ve think filtresi için release APK derle ve doğrula
+- [x] Model yanıtındaki düşünme bloklarını ayrıştırıp mesaj veri modelinde sakla
+- [x] Düşünme metnini açılıp kapanan ve Markdown destekli bir mesaj bölümü olarak göster
+- [x] Ana sohbet ekranına yüksek etkili, erişilebilir ve performanslı animasyonlar ekle
+- [x] Düşünme görünümü ve hareketli arayüz için regresyon testleri ekle
+- [x] Düşünme görünümü ve animasyonlar için release APK derle ve doğrula

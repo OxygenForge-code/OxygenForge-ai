@@ -152,6 +152,7 @@ class ChatMessage {
     required this.createdAt,
     this.provider,
     this.model,
+    this.thinking,
   });
 
   final String id;
@@ -160,6 +161,7 @@ class ChatMessage {
   final DateTime createdAt;
   final AiProvider? provider;
   final String? model;
+  final String? thinking;
 
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -168,6 +170,7 @@ class ChatMessage {
         'createdAt': createdAt.toIso8601String(),
         'provider': provider?.name,
         'model': model,
+        'thinking': thinking,
       };
 
   factory ChatMessage.fromJson(Map<String, dynamic> json) {
@@ -180,6 +183,7 @@ class ChatMessage {
       createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ?? DateTime.now(),
       provider: json['provider'] is String ? aiProviderFromName(json['provider'] as String) : null,
       model: json['model'] as String?,
+      thinking: json['thinking'] as String?,
     );
   }
 }

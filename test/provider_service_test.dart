@@ -41,7 +41,8 @@ void main() {
       ),
     );
 
-    expect(result, 'Groq yanıtı');
+    expect(result.text, 'Groq yanıtı');
+    expect(result.thinking, isNull);
   });
 
   test('Gemini native generateContent request ve response alanlarını eşler', () async {
@@ -67,7 +68,8 @@ void main() {
       ),
     );
 
-    expect(result, 'Gemini yanıtı');
+    expect(result.text, 'Gemini yanıtı');
+    expect(result.thinking, isNull);
   });
 
   test('Anthropic Messages API response içindeki text bloğunu okur', () async {
@@ -92,10 +94,11 @@ void main() {
       ),
     );
 
-    expect(result, 'Claude yanıtı');
+    expect(result.text, 'Claude yanıtı');
+    expect(result.thinking, isNull);
   });
 
-  test('think, analysis ve reasoning bloklarını yanıt gösterilmeden önce temizler', () async {
+  test('think ve analysis bloklarını görünür yanıttan ayırıp düşünme alanında saklar', () async {
     final client = MockClient((_) async {
       return http.Response.bytes(
         utf8.encode(
@@ -124,9 +127,10 @@ void main() {
       ),
     );
 
-    expect(result, '**Güvenli yanıt**');
-    expect(result, isNot(contains('<think>')));
-    expect(result, isNot(contains('<analysis>')));
+    expect(result.text, '**Güvenli yanıt**');
+    expect(result.text, isNot(contains('<think>')));
+    expect(result.text, isNot(contains('<analysis>')));
+    expect(result.thinking, 'Gizli iç adımlar.\n\nGizli analiz.');
   });
 
 

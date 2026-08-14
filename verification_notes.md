@@ -60,3 +60,11 @@ Görsel attachment gönderilmeden önce seçili sağlayıcı ve modelin görünt
 OpenAI uyumlu sağlayıcılar, Gemini ve Anthropic yanıtları ekranda gösterilmeden önce işlenir. `<think>`, `<thinking>`, `<analysis>`, `<reasoning>` ve `<thought>` blokları ile tek başına kalan etiketleri temizlenir; Markdown içeren görünür yanıt korunur. Uygulamanın merkezi renk tokenları siyah, beyaz ve nötr gri tonlarına dönüştürüldü; önceki mor, cyan, yeşil ve kırmızı vurgu renkleri kaldırıldı.
 
 `flutter analyze` temiz geçti ve toplam 12 test başarıyla tamamlandı. Final Android APK `versionName 1.4.2`, `versionCode 8` olarak üretildi. Paket içinde `INTERNET`, `RECORD_AUDIO` ve `CAMERA` izinleri doğrulandı; APK v2 imzası geçerli. SHA-256: `9bd9b7266d2854c0ef61fda5d85201718a32943022a03219bbcbb17f2d4f0dcd`.
+
+## Düşünme görünümü ve hareketli arayüz QA (1.4.3)
+
+Sağlayıcı yanıtlarında bulunan `<think>`, `<thinking>`, `<analysis>`, `<reasoning>` ve `<thought>` blokları görünür yanıttan ayrıştırılır, sohbet mesajında kalıcı olarak saklanır ve `Modelin düşünme süreci` başlıklı varsayılan açık panelde Markdown olarak gösterilir. Panel kullanıcı tarafından açılıp kapatılabilir; ana yanıt ve düşünme metni birlikte kopyalanabilir.
+
+Mesajlar girişte kayma/sönme hareketiyle görünür. Düşünme paneli, başlık ve durum metinleri akıcı geçişler kullanır; yazıyor göstergesi nabız şeklinde çalışır. Hızlı aksiyonlar, oturum seçimi, bağlantı durumu ve oluşturucu alan basma, ölçek, ışık ve ikon geçişleriyle hareketlendirildi. Sistem seviyesinde hareket azaltma tercihi etkin olduğunda bu hareketler devre dışı kalır.
+
+`flutter analyze` temiz geçti ve toplam 14 test başarıyla tamamlandı. Final Android APK `versionName 1.4.3`, `versionCode 9` olarak üretildi. Paket içinde `INTERNET`, `RECORD_AUDIO` ve `CAMERA` izinleri doğrulandı; APK v2 imzası geçerli. SHA-256: `1e87cab856ca72f941109679ca0ada2182a5c014a91c05ab3ad8542f7e651abf`.

@@ -134,10 +134,11 @@ class _HomeScreenState extends State<HomeScreen> {
           ChatMessage(
             id: DateTime.now().microsecondsSinceEpoch.toString(),
             role: MessageRole.assistant,
-            text: response,
+            text: response.text,
             createdAt: DateTime.now(),
             provider: _settings.provider,
             model: _settings.effectiveModel,
+            thinking: response.thinking,
           ),
         );
         session.updatedAt = DateTime.now();
@@ -360,10 +361,11 @@ class _HomeScreenState extends State<HomeScreen> {
           ChatMessage(
             id: DateTime.now().microsecondsSinceEpoch.toString(),
             role: MessageRole.assistant,
-            text: response,
+            text: response.text,
             createdAt: DateTime.now(),
             provider: _settings.provider,
             model: _settings.effectiveModel,
+            thinking: response.thinking,
           ),
         );
         session.updatedAt = DateTime.now();
@@ -621,15 +623,38 @@ class _WorkspaceHeader extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w700)),
+                AnimatedSwitcher(
+                  duration: MediaQuery.disableAnimationsOf(context) ? Duration.zero : const Duration(milliseconds: 260),
+                  switchInCurve: Curves.easeOutCubic,
+                  switchOutCurve: Curves.easeInCubic,
+                  transitionBuilder: (child, animation) => FadeTransition(
+                    opacity: animation,
+                    child: SlideTransition(
+                      position: Tween<Offset>(begin: const Offset(0, 0.22), end: Offset.zero).animate(animation),
+                      child: child,
+                    ),
+                  ),
+                  child: Text(
+                    title,
+                    key: ValueKey(title),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                ),
                 const SizedBox(height: 4),
                 Row(
                   children: [
                     Icon(Icons.auto_awesome_rounded, size: 13, color: connected ? OxygenForgeTheme.green : OxygenForgeTheme.violetBright),
                     const SizedBox(width: 5),
-                    Text(
-                      connected ? '${provider.label}  ·  $model' : '${provider.label} demo motoru',
-                      style: const TextStyle(color: OxygenForgeTheme.muted, fontSize: 11.5),
+                    AnimatedSwitcher(
+                      duration: MediaQuery.disableAnimationsOf(context) ? Duration.zero : const Duration(milliseconds: 220),
+                      transitionBuilder: (child, animation) => FadeTransition(opacity: animation, child: child),
+                      child: Text(
+                        connected ? '${provider.label}  ·  $model' : '${provider.label} demo motoru',
+                        key: ValueKey('${provider.name}-$model-$connected'),
+                        style: const TextStyle(color: OxygenForgeTheme.muted, fontSize: 11.5),
+                      ),
                     ),
                   ],
                 ),
@@ -923,7 +948,7 @@ class _QuickActions extends StatelessWidget {
   }
 }
 
-class _QuickActionChip extends StatelessWidget {
+class _QuickActionChip extends StatefulWidget {
   const _QuickActionChip({required this.icon, required this.label, required this.onPressed});
 
   final IconData icon;
@@ -931,16 +956,64 @@ class _QuickActionChip extends StatelessWidget {
   final VoidCallback onPressed;
 
   @override
+  State<_QuickActionChip> createState() => _QuickActionChipState();
+}
+
+class _QuickActionChipState extends State<_QuickActionChip> with SingleTickerProviderStateMixin {
+  late final AnimationController _attentionController;
+  var _pressed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _attentionController = AnimationController(vsync: this, duration: const Duration(milliseconds: 1350));
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _attentionController.stop();
+    } else if (_attentionController.status == AnimationStatus.dismissed) {
+      _attentionController.forward();
+    }
+  }
+
+  @override
+  void dispose() {
+    _attentionController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return ActionChip(
-      onPressed: onPressed,
-      avatar: Icon(icon, size: 17, color: OxygenForgeTheme.text),
-      label: Text(label),
-      labelStyle: const TextStyle(color: OxygenForgeTheme.text, fontSize: 12.5, fontWeight: FontWeight.w600),
-      backgroundColor: OxygenForgeTheme.panelRaised,
-      side: const BorderSide(color: OxygenForgeTheme.line),
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 8),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+    return AnimatedBuilder(
+      animation: _attentionController,
+      builder: (context, child) {
+        final lift = reduceMotion ? 0.0 : -1.5 * _attentionController.value;
+        return Transform.translate(offset: Offset(0, lift), child: child);
+      },
+      child: GestureDetector(
+        onTapDown: (_) => setState(() => _pressed = true),
+        onTapUp: (_) => setState(() => _pressed = false),
+        onTapCancel: () => setState(() => _pressed = false),
+        child: AnimatedScale(
+          scale: _pressed ? 0.95 : 1,
+          duration: reduceMotion ? Duration.zero : const Duration(milliseconds: 120),
+          curve: Curves.easeOutCubic,
+          child: ActionChip(
+            onPressed: widget.onPressed,
+            avatar: Icon(widget.icon, size: 17, color: OxygenForgeTheme.text),
+            label: Text(widget.label),
+            labelStyle: const TextStyle(color: OxygenForgeTheme.text, fontSize: 12.5, fontWeight: FontWeight.w600),
+            backgroundColor: OxygenForgeTheme.panelRaised,
+            side: const BorderSide(color: OxygenForgeTheme.line),
+            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 8),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -974,12 +1047,21 @@ class _Composer extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(24, 4, 24, 20),
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 820),
-        child: Container(
+        child: AnimatedContainer(
+          duration: MediaQuery.disableAnimationsOf(context) ? Duration.zero : const Duration(milliseconds: 240),
+          curve: Curves.easeOutCubic,
           decoration: BoxDecoration(
             color: OxygenForgeTheme.panelRaised,
             borderRadius: BorderRadius.circular(22),
             border: Border.all(color: isListening ? OxygenForgeTheme.violetBright : OxygenForgeTheme.line),
-            boxShadow: const [BoxShadow(color: Color(0x40000000), blurRadius: 24, offset: Offset(0, 7))],
+            boxShadow: [
+              BoxShadow(
+                color: isListening ? OxygenForgeTheme.text.withValues(alpha: 0.16) : const Color(0x40000000),
+                blurRadius: isListening ? 34 : 24,
+                spreadRadius: isListening ? 1 : 0,
+                offset: const Offset(0, 7),
+              ),
+            ],
           ),
           padding: const EdgeInsets.fromLTRB(8, 7, 8, 8),
           child: Column(
@@ -1033,22 +1115,40 @@ class _Composer extends StatelessWidget {
                   IconButton(
                     onPressed: isTyping ? null : onVoice,
                     tooltip: isListening ? 'Dinlemeyi durdur' : 'Sesli giriş',
-                    icon: Icon(
-                      isListening ? Icons.mic_rounded : Icons.mic_none_rounded,
-                      color: isListening ? OxygenForgeTheme.violetBright : OxygenForgeTheme.muted,
+                    icon: AnimatedSwitcher(
+                      duration: MediaQuery.disableAnimationsOf(context) ? Duration.zero : const Duration(milliseconds: 180),
+                      transitionBuilder: (child, animation) => ScaleTransition(scale: animation, child: FadeTransition(opacity: animation, child: child)),
+                      child: Icon(
+                        isListening ? Icons.mic_rounded : Icons.mic_none_rounded,
+                        key: ValueKey(isListening),
+                        color: isListening ? OxygenForgeTheme.violetBright : OxygenForgeTheme.muted,
+                      ),
                     ),
                   ),
-                  IconButton.filled(
-                    onPressed: isTyping ? null : onSend,
-                    tooltip: 'Gönder',
-                    style: IconButton.styleFrom(
-                      backgroundColor: OxygenForgeTheme.violet,
-                      foregroundColor: Colors.black,
-                      disabledBackgroundColor: OxygenForgeTheme.line,
-                      disabledForegroundColor: OxygenForgeTheme.muted,
-                      padding: const EdgeInsets.all(12),
+                  AnimatedScale(
+                    scale: isTyping ? 0.9 : 1,
+                    duration: MediaQuery.disableAnimationsOf(context) ? Duration.zero : const Duration(milliseconds: 180),
+                    curve: Curves.easeOutBack,
+                    child: IconButton.filled(
+                      onPressed: isTyping ? null : onSend,
+                      tooltip: 'Gönder',
+                      style: IconButton.styleFrom(
+                        backgroundColor: OxygenForgeTheme.violet,
+                        foregroundColor: Colors.black,
+                        disabledBackgroundColor: OxygenForgeTheme.line,
+                        disabledForegroundColor: OxygenForgeTheme.muted,
+                        padding: const EdgeInsets.all(12),
+                      ),
+                      icon: AnimatedSwitcher(
+                        duration: MediaQuery.disableAnimationsOf(context) ? Duration.zero : const Duration(milliseconds: 180),
+                        transitionBuilder: (child, animation) => RotationTransition(turns: animation, child: FadeTransition(opacity: animation, child: child)),
+                        child: Icon(
+                          isTyping ? Icons.hourglass_top_rounded : Icons.arrow_upward_rounded,
+                          key: ValueKey(isTyping),
+                          size: 19,
+                        ),
+                      ),
                     ),
-                    icon: Icon(isTyping ? Icons.hourglass_top_rounded : Icons.arrow_upward_rounded, size: 19),
                   ),
                 ],
               ),
@@ -1086,24 +1186,44 @@ class _SessionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      onTap: onTap,
-      dense: true,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 10),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      tileColor: selected ? OxygenForgeTheme.violet.withValues(alpha: 0.12) : Colors.transparent,
-      leading: Icon(
-        selected ? Icons.chat_bubble_rounded : Icons.chat_bubble_outline_rounded,
-        size: 17,
-        color: selected ? OxygenForgeTheme.violetBright : OxygenForgeTheme.muted,
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+    return AnimatedScale(
+      scale: selected ? 1 : 0.985,
+      duration: reduceMotion ? Duration.zero : const Duration(milliseconds: 220),
+      curve: Curves.easeOutBack,
+      child: AnimatedContainer(
+        duration: reduceMotion ? Duration.zero : const Duration(milliseconds: 220),
+        curve: Curves.easeOutCubic,
+        decoration: BoxDecoration(
+          color: selected ? OxygenForgeTheme.violet.withValues(alpha: 0.12) : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: selected ? OxygenForgeTheme.text.withValues(alpha: 0.18) : Colors.transparent,
+          ),
+        ),
+        child: ListTile(
+          onTap: onTap,
+          dense: true,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 10),
+          leading: AnimatedSwitcher(
+            duration: reduceMotion ? Duration.zero : const Duration(milliseconds: 180),
+            transitionBuilder: (child, animation) => ScaleTransition(scale: animation, child: FadeTransition(opacity: animation, child: child)),
+            child: Icon(
+              selected ? Icons.chat_bubble_rounded : Icons.chat_bubble_outline_rounded,
+              key: ValueKey(selected),
+              size: 17,
+              color: selected ? OxygenForgeTheme.violetBright : OxygenForgeTheme.muted,
+            ),
+          ),
+          title: Text(
+            session.title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(color: selected ? OxygenForgeTheme.text : OxygenForgeTheme.muted, fontSize: 12.5, fontWeight: selected ? FontWeight.w700 : FontWeight.w500),
+          ),
+          subtitle: Text(_relativeDate(session.updatedAt), style: const TextStyle(color: OxygenForgeTheme.muted, fontSize: 10.5)),
+        ),
       ),
-      title: Text(
-        session.title,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: TextStyle(color: selected ? OxygenForgeTheme.text : OxygenForgeTheme.muted, fontSize: 12.5, fontWeight: selected ? FontWeight.w700 : FontWeight.w500),
-      ),
-      subtitle: Text(_relativeDate(session.updatedAt), style: const TextStyle(color: OxygenForgeTheme.muted, fontSize: 10.5)),
     );
   }
 
@@ -1126,19 +1246,34 @@ class _ConnectionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = connected ? OxygenForgeTheme.green : OxygenForgeTheme.cyan;
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
-      child: Container(
+      child: AnimatedContainer(
+        duration: reduceMotion ? Duration.zero : const Duration(milliseconds: 280),
+        curve: Curves.easeOutCubic,
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.07),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: color.withValues(alpha: 0.18)),
+          boxShadow: connected
+              ? [BoxShadow(color: OxygenForgeTheme.text.withValues(alpha: 0.08), blurRadius: 18, spreadRadius: 1)]
+              : const [],
         ),
         child: Row(
           children: [
-            Icon(connected ? Icons.check_circle_outline_rounded : Icons.bolt_rounded, color: color, size: 20),
+            AnimatedSwitcher(
+              duration: reduceMotion ? Duration.zero : const Duration(milliseconds: 220),
+              transitionBuilder: (child, animation) => RotationTransition(turns: animation, child: FadeTransition(opacity: animation, child: child)),
+              child: Icon(
+                connected ? Icons.check_circle_outline_rounded : Icons.bolt_rounded,
+                key: ValueKey(connected),
+                color: color,
+                size: 20,
+              ),
+            ),
             const SizedBox(width: 10),
             Expanded(
               child: Column(

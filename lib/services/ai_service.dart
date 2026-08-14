@@ -75,11 +75,18 @@ class AiServiceException implements Exception {
   String toString() => '$title: $message';
 }
 
+class AiResponse {
+  const AiResponse({required this.text, this.thinking});
+
+  final String text;
+  final String? thinking;
+}
+
 class AiService {
   const AiService({this._client});
 
   static final RegExp _reasoningBlockPattern = RegExp(
-    r'<\s*(think|thinking|analysis|reasoning|thought)\b[^>]*>[\s\S]*?<\s*/\s*\1\s*>',
+    r'<\s*(think|thinking|analysis|reasoning|thought)\b[^>]*>([\s\S]*?)<\s*/\s*\1\s*>',
     caseSensitive: false,
   );
   static final RegExp _reasoningTagPattern = RegExp(
@@ -95,7 +102,7 @@ class AiService {
 
   http.Client get _httpClient => _client ?? http.Client();
 
-  Future<String> reply({
+  Future<AiResponse> reply({
     required List<ChatMessage> history,
     required AppSettings settings,
     AiAttachment? attachment,
@@ -112,7 +119,7 @@ class AiService {
 
     if (settings.apiKey.trim().isEmpty) {
       await Future<void>.delayed(const Duration(milliseconds: 650));
-      return _demoReply(latestUserMessage.text, settings.provider);
+      return AiResponse(text: _demoReply(latestUserMessage.text, settings.provider));
     }
 
     if (attachment != null && !settings.supportsVision) {
@@ -207,7 +214,7 @@ class AiService {
     return clean.length > 180 ? '${clean.substring(0, 180)}…' : clean;
   }
 
-  Future<String> _replyWithOpenAiCompatible({
+  Future<AiResponse> _replyWithOpenAiCompatible({
     required List<ChatMessage> history,
     required AppSettings settings,
     AiAttachment? attachment,
@@ -238,8 +245,8 @@ class AiService {
     _throwIfFailed(response, decoded, settings);
     final content = decoded?['choices']?[0]?['message']?['content'];
     if (content is String) {
-      final visibleText = _visibleAssistantText(content);
-      if (visibleText.isNotEmpty) return visibleText;
+      final parsedResponse = _parseAssistantResponse(content);
+      if (parsedResponse.text.isNotEmpty || parsedResponse.thinking != null) return parsedResponse;
     }
     throw AiServiceException(
       kind: AiFailureKind.decoding,
@@ -248,7 +255,7 @@ class AiService {
     );
   }
 
-  Future<String> _replyWithGemini({
+  Future<AiResponse> _replyWithGemini({
     required List<ChatMessage> history,
     required AppSettings settings,
     AiAttachment? attachment,
@@ -302,8 +309,8 @@ class AiService {
       final parts = content is Map ? content['parts'] : null;
       if (parts is List) {
         final text = parts.whereType<Map>().map((part) => part['text']).whereType<String>().join();
-        final visibleText = _visibleAssistantText(text);
-        if (visibleText.isNotEmpty) return visibleText;
+        final parsedResponse = _parseAssistantResponse(text);
+        if (parsedResponse.text.isNotEmpty || parsedResponse.thinking != null) return parsedResponse;
       }
     }
     throw AiServiceException(
@@ -313,7 +320,7 @@ class AiService {
     );
   }
 
-  Future<String> _replyWithAnthropic({
+  Future<AiResponse> _replyWithAnthropic({
     required List<ChatMessage> history,
     required AppSettings settings,
     AiAttachment? attachment,
@@ -367,8 +374,8 @@ class AiService {
           .map((block) => block['text'])
           .whereType<String>()
           .join();
-      final visibleText = _visibleAssistantText(text);
-      if (visibleText.isNotEmpty) return visibleText;
+      final parsedResponse = _parseAssistantResponse(text);
+      if (parsedResponse.text.isNotEmpty || parsedResponse.thinking != null) return parsedResponse;
     }
     throw AiServiceException(
       kind: AiFailureKind.decoding,
@@ -443,18 +450,27 @@ class AiService {
     );
   }
 
-  String _visibleAssistantText(String rawText) {
-    var visibleText = rawText.replaceAll(_reasoningBlockPattern, '');
+  AiResponse _parseAssistantResponse(String rawText) {
+    final thinkingParts = <String>[];
+    var visibleText = rawText.replaceAllMapped(_reasoningBlockPattern, (match) {
+      final thinking = match.group(2)?.trim();
+      if (thinking != null && thinking.isNotEmpty) thinkingParts.add(thinking);
+      return '';
+    });
 
     final unclosedStart = _unclosedReasoningStartPattern.firstMatch(visibleText);
     if (unclosedStart != null) {
+      final thinking = visibleText.substring(unclosedStart.end).trim();
+      if (thinking.isNotEmpty) thinkingParts.add(thinking);
       visibleText = visibleText.substring(0, unclosedStart.start);
     }
 
-    return visibleText
+    final text = visibleText
         .replaceAll(_reasoningTagPattern, '')
         .replaceAll(RegExp(r'\n{3,}'), '\n\n')
         .trim();
+    final thinking = thinkingParts.join('\n\n').trim();
+    return AiResponse(text: text, thinking: thinking.isEmpty ? null : thinking);
   }
 
   String _demoReply(String prompt, AiProvider provider) {
