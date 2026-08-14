@@ -18,3 +18,9 @@ Arayüzde sağlayıcı seçimi, sağlayıcı bazlı anahtar saklama, model ve en
 ## Kullanıcı hata görüntüsü
 
 1080×198 piksel, yatay ve iki örtüşen parça halinde incelenen ekran görüntüsünde şu hata doğrulandı: `Bağlantı kurulamadı: ClientException with SocketFailed host lookup: 'api.groq.com' (OS Error: No address associated with hostname, ...)`. Bu, uygulama isteği göndermeden önce `api.groq.com` alan adının cihaz/sandbox DNS çözümlemesinde başarısız olduğunu gösterir; bu nedenle arayüzde hata türü, sağlayıcı, yeniden deneme ve endpoint kontrolü görünür hale getirilecektir.
+
+## Android release internet izni düzeltmesi
+
+Release APK manifesti incelendiğinde önceki pakette yalnızca debug manifestinde bulunan `android.permission.INTERNET` izninin release manifestine aktarılmadığı doğrulandı. Ana manifest güncellendi ve yeni APK içinde `aapt2 dump permissions` çıktısında `android.permission.INTERNET` görünür hale geldi.
+
+Yeni 1.2.1 APK'da paket metadata'sı `versionName 1.2.1`, `versionCode 4` olarak doğrulandı; APK imzası v2 ile doğrulandı. Üst durum göstergesi de gerçek bağlantı sağlığını yanlış biçimde `Bağlı` olarak göstermemesi için `Anahtar hazır` şeklinde güncellendi.

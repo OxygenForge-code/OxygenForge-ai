@@ -533,7 +533,7 @@ class _WorkspaceHeader extends StatelessWidget {
               ],
             ),
           ),
-          ModePill(label: connected ? 'Bağlı' : 'Demo mod', connected: connected),
+          ModePill(label: connected ? 'Anahtar hazır' : 'Demo mod', connected: connected),
           const SizedBox(width: 6),
           IconButton(
             onPressed: onRegenerate,
@@ -874,9 +874,9 @@ class _ConnectionCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(connected ? '${provider.label} bağlı' : '${provider.label} demo', style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w800)),
+                  Text(connected ? '${provider.label} hazır' : '${provider.label} demo', style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w800)),
                   const SizedBox(height: 3),
-                  Text(connected ? 'Gerçek model hazır' : 'Anahtar eklemek için aç', style: const TextStyle(color: OxygenForgeTheme.muted, fontSize: 10.5)),
+                  Text(connected ? 'Anahtar kaydedildi' : 'Anahtar eklemek için aç', style: const TextStyle(color: OxygenForgeTheme.muted, fontSize: 10.5)),
                 ],
               ),
             ),
