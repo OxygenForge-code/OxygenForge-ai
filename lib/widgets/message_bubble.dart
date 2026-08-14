@@ -1,0 +1,133 @@
+import 'package:flutter/material.dart';
+
+import '../app_theme.dart';
+import '../models/chat_models.dart';
+import 'forge_logo.dart';
+
+class MessageBubble extends StatelessWidget {
+  const MessageBubble({required this.message, super.key});
+
+  final ChatMessage message;
+
+  @override
+  Widget build(BuildContext context) {
+    final isUser = message.role == MessageRole.user;
+    final maxWidth = MediaQuery.sizeOf(context).width > 800 ? 720.0 : double.infinity;
+
+    return Align(
+      alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: maxWidth),
+        child: Padding(
+          padding: EdgeInsets.only(
+            left: isUser ? 52 : 0,
+            right: isUser ? 0 : 52,
+            bottom: 20,
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+            children: [
+              if (!isUser) const ForgeLogo(compact: true),
+              if (!isUser) const SizedBox(width: 12),
+              Flexible(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 17, vertical: 14),
+                  decoration: BoxDecoration(
+                    color: isUser ? OxygenForgeTheme.violet.withValues(alpha: 0.18) : OxygenForgeTheme.panel,
+                    borderRadius: BorderRadius.only(
+                      topLeft: const Radius.circular(18),
+                      topRight: const Radius.circular(18),
+                      bottomLeft: Radius.circular(isUser ? 18 : 5),
+                      bottomRight: Radius.circular(isUser ? 5 : 18),
+                    ),
+                    border: Border.all(
+                      color: isUser ? OxygenForgeTheme.violet.withValues(alpha: 0.35) : OxygenForgeTheme.line,
+                    ),
+                  ),
+                  child: SelectableText(
+                    message.text,
+                    style: const TextStyle(fontSize: 14.5, height: 1.55, color: OxygenForgeTheme.text),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class TypingBubble extends StatelessWidget {
+  const TypingBubble({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        const ForgeLogo(compact: true),
+        const SizedBox(width: 12),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 15),
+          decoration: BoxDecoration(
+            color: OxygenForgeTheme.panel,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: OxygenForgeTheme.line),
+          ),
+          child: const SizedBox(
+            width: 36,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _Dot(delay: 0),
+                _Dot(delay: 120),
+                _Dot(delay: 240),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _Dot extends StatefulWidget {
+  const _Dot({required this.delay});
+
+  final int delay;
+
+  @override
+  State<_Dot> createState() => _DotState();
+}
+
+class _DotState extends State<_Dot> with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 700))
+      ..forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: Tween<double>(begin: 0.25, end: 1).animate(
+        CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+      ),
+      child: Container(
+        width: 6,
+        height: 6,
+        decoration: const BoxDecoration(color: OxygenForgeTheme.violetBright, shape: BoxShape.circle),
+      ),
+    );
+  }
+}
