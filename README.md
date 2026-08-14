@@ -108,3 +108,9 @@ AI ve kullanıcı mesajları artık gerçek Markdown olarak render edilir. `**ka
 Composer sadeleştirildi. Sağlayıcılar, kamera ve galeriden görsel seçme hızlı aksiyon çipleriyle erişilebilir; mikrofon düğmesi Türkçe sesli girişi metne dönüştürür. Seçilen görseller OpenAI uyumlu vision formatına, Gemini `inlineData` formatına veya Anthropic base64 image formatına çevrilerek ilgili sağlayıcıya gönderilir. Görsel tek başına gönderilirse varsayılan talimat `Bu görseli analiz et.` olur.
 
 Android için internet, kamera ve mikrofon izinleri; iOS için mikrofon, kamera ve fotoğraf kütüphanesi kullanım açıklamaları tanımlanmıştır.
+
+## Minimal mobil arayüz
+
+Mobil compact görünüm referans tasarıma göre sadeleştirilmiştir. Üst barda dairesel menü düğmesi, `Groq API` benzeri aktif sağlayıcı pill’i ve tek dairesel bağlantı düğmesi bulunur. Boş çalışma alanında büyük karşılama kartları gösterilmez; dikkat alt hızlı aksiyonlara ve composer’a bırakılır.
+
+Alt bölümde `Try Connectors`, `Open Camera` ve `Choose Image` çipleri bulunur. Composer, `+` görsel ekleme, mikrofon ve büyük dairesel gönderme düğmesiyle tek satırlı ve odaklı bir kullanım sunar.

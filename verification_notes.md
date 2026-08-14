@@ -36,3 +36,9 @@ Seçilen görseller OpenAI uyumlu `image_url`, Gemini `inlineData` ve Anthropic 
 Final APK `versionName 1.3.0`, `versionCode 5` olarak üretildi. Paket içinde `INTERNET`, `RECORD_AUDIO` ve `CAMERA` izinleri doğrulandı. APK v2 imzası geçerli. `flutter analyze` temiz geçti ve 5 test başarıyla tamamlandı.
 
 Release build sırasında sandbox belleğine uygun Gradle ayarları kullanıldı: tek worker, daemon kapalı, `-Xmx1024m` ve `MaxMetaspaceSize=512m`. Final APK SHA-256: `c5e58af7fa9d851bae8454fceccefaf0acedc202ae7a26209263f282c397b80a`.
+
+## Minimal mobil arayüz QA
+
+Mobil compact görünüm referanstaki siyah ve sade kompozisyona dönüştürüldü. Üstte dairesel menü düğmesi, sağlayıcı API pill’i ve tek dairesel bağlantı aksiyonu bulunur. Boş çalışma alanında karşılama kartları gizlenir; altta `Try Connectors`, `Open Camera`, `Choose Image` çipleri ve büyük `Ask OxygenForge AI…` composer görünür.
+
+Final Android release APK `versionName 1.3.0`, `versionCode 5` olarak üretildi. `INTERNET`, `RECORD_AUDIO` ve `CAMERA` izinleri pakette doğrulandı. APK v2 imzası geçerli. SHA-256: `0ce477f3c8b3c70cfa9f0ab084309829452cd5d7e0d94ddf86b9a368da7abeb0`.

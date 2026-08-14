@@ -9,8 +9,10 @@ void main() {
     await tester.pumpWidget(const OxygenForgeApp());
     await tester.pumpAndSettle();
 
-    expect(find.text('Fikrini ateşle.'), findsOneWidget);
-    expect(find.text('Yeni çalışma'), findsOneWidget);
-    expect(find.text('OxygenForge AI\'ya sor…'), findsOneWidget);
+    expect(find.text('Fikrini ateşle.'), findsNothing);
+    expect(find.text('Yeni çalışma'), findsNothing);
+    expect(find.text('Try Connectors'), findsOneWidget);
+    expect(find.text('Open Camera'), findsOneWidget);
+    expect(find.text('Ask OxygenForge AI…'), findsOneWidget);
   });
 }

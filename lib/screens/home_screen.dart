@@ -503,6 +503,7 @@ class _HomeScreenState extends State<HomeScreen> {
       children: [
         _WorkspaceHeader(
           isCompact: isCompact,
+          minimal: isCompact,
           title: session?.title ?? 'Yeni çalışma',
           model: _settings.effectiveModel,
           provider: _settings.provider,
@@ -511,7 +512,7 @@ class _HomeScreenState extends State<HomeScreen> {
           onExport: _exportCurrentSession,
           onRegenerate: _regenerateLast,
         ),
-        Expanded(child: _buildConversation(session)),
+        Expanded(child: _buildConversation(session, compact: isCompact)),
         _QuickActions(
           onProviders: _openSettings,
           onCamera: () => _pickImage(ImageSource.camera),
@@ -532,10 +533,10 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildConversation(ChatSession? session) {
+  Widget _buildConversation(ChatSession? session, {required bool compact}) {
     final messages = session?.messages ?? <ChatMessage>[];
     if (messages.isEmpty) {
-      return _WelcomeView(onPromptTap: _usePrompt);
+      return compact ? const SizedBox.expand() : _WelcomeView(onPromptTap: _usePrompt);
     }
 
     return ListView.builder(
@@ -565,6 +566,7 @@ class _HomeScreenState extends State<HomeScreen> {
 class _WorkspaceHeader extends StatelessWidget {
   const _WorkspaceHeader({
     required this.isCompact,
+    required this.minimal,
     required this.title,
     required this.model,
     required this.provider,
@@ -575,6 +577,7 @@ class _WorkspaceHeader extends StatelessWidget {
   });
 
   final bool isCompact;
+  final bool minimal;
   final String title;
   final String model;
   final AiProvider provider;
@@ -585,6 +588,9 @@ class _WorkspaceHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (minimal) {
+      return _MinimalHeader(provider: provider, onSettings: onSettings);
+    }
     return Container(
       height: 76,
       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -642,6 +648,65 @@ class _WorkspaceHeader extends StatelessWidget {
             icon: const Icon(Icons.tune_rounded, color: OxygenForgeTheme.muted),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _MinimalHeader extends StatelessWidget {
+  const _MinimalHeader({required this.provider, required this.onSettings});
+
+  final AiProvider provider;
+  final VoidCallback onSettings;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 82,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
+        child: Row(
+          children: [
+            Builder(
+              builder: (context) => IconButton.filledTonal(
+                onPressed: () => Scaffold.of(context).openDrawer(),
+                tooltip: 'Menüyü aç',
+                style: IconButton.styleFrom(
+                  backgroundColor: const Color(0xFF202020),
+                  foregroundColor: Colors.white,
+                  side: const BorderSide(color: Color(0xFF3A3A3A)),
+                  padding: const EdgeInsets.all(14),
+                ),
+                icon: const Icon(Icons.menu_rounded, size: 23),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 11),
+              decoration: BoxDecoration(
+                color: const Color(0xFF202020),
+                borderRadius: BorderRadius.circular(28),
+                border: Border.all(color: const Color(0xFF3A3A3A)),
+              ),
+              child: Text(
+                '${provider.label} API',
+                style: const TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w500),
+              ),
+            ),
+            const Spacer(),
+            IconButton.filledTonal(
+              onPressed: onSettings,
+              tooltip: 'Bağlantılar',
+              style: IconButton.styleFrom(
+                backgroundColor: const Color(0xFF202020),
+                foregroundColor: Colors.white,
+                side: const BorderSide(color: Color(0xFF3A3A3A)),
+                padding: const EdgeInsets.all(14),
+              ),
+              icon: const Icon(Icons.blur_circular_rounded, size: 24),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -826,11 +891,11 @@ class _QuickActions extends StatelessWidget {
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
         children: [
-          _QuickActionChip(icon: Icons.hub_rounded, label: 'Sağlayıcılar', onPressed: onProviders),
+          _QuickActionChip(icon: Icons.hub_rounded, label: 'Try Connectors', onPressed: onProviders),
           const SizedBox(width: 8),
-          _QuickActionChip(icon: Icons.camera_alt_rounded, label: 'Kamera', onPressed: onCamera),
+          _QuickActionChip(icon: Icons.camera_alt_rounded, label: 'Open Camera', onPressed: onCamera),
           const SizedBox(width: 8),
-          _QuickActionChip(icon: Icons.photo_library_rounded, label: 'Görsel seç', onPressed: onGallery),
+          _QuickActionChip(icon: Icons.photo_library_rounded, label: 'Choose Image', onPressed: onGallery),
         ],
       ),
     );
@@ -936,7 +1001,7 @@ class _Composer extends StatelessWidget {
                       style: const TextStyle(fontSize: 14),
                       decoration: const InputDecoration(
                         filled: false,
-                        hintText: 'OxygenForge AI\'ya sor…',
+                        hintText: 'Ask OxygenForge AI…',
                         border: InputBorder.none,
                         enabledBorder: InputBorder.none,
                         focusedBorder: InputBorder.none,
