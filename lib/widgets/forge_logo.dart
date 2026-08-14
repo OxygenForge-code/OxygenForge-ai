@@ -20,10 +20,10 @@ class ForgeLogo extends StatelessWidget {
             borderRadius: BorderRadius.circular(compact ? 10 : 13),
             gradient: const ForgeGradient(),
             boxShadow: const [
-              BoxShadow(color: Color(0x408B5CF6), blurRadius: 18, offset: Offset(0, 6)),
+              BoxShadow(color: Color(0x40FFFFFF), blurRadius: 18, offset: Offset(0, 6)),
             ],
           ),
-          child: Icon(Icons.bolt_rounded, size: compact ? 19 : 23, color: Colors.white),
+          child: Icon(Icons.bolt_rounded, size: compact ? 19 : 23, color: Colors.black),
         ),
         if (!compact) ...[
           const SizedBox(width: 12),

@@ -11,3 +11,7 @@
 - [x] Görsel desteklemeyen Groq modelleri için anlaşılır model değiştirme yönlendirmesi ekle
 - [x] Vision uyumlu Groq/Gemini/OpenAI istek gövdelerini test et
 - [x] Görsel uyumluluk düzeltmesini release APK olarak derle ve doğrula
+- [x] AI yanıtlarındaki think/reasoning etiketlerini kullanıcıya gösterilmeden temizle
+- [x] Tüm Flutter arayüz renklerini saf siyah-beyaz temaya dönüştür
+- [x] Yanıt filtresi ve siyah-beyaz tema için regresyon testleri ekle
+- [x] Siyah-beyaz tema ve think filtresi için release APK derle ve doğrula

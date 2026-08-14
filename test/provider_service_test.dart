@@ -95,6 +95,40 @@ void main() {
     expect(result, 'Claude yanıtı');
   });
 
+  test('think, analysis ve reasoning bloklarını yanıt gösterilmeden önce temizler', () async {
+    final client = MockClient((_) async {
+      return http.Response.bytes(
+        utf8.encode(
+          jsonEncode({
+            'choices': [
+              {
+                'message': {
+                  'content': '<think>Gizli iç adımlar.</think>\n<analysis>Gizli analiz.</analysis>\n\n**Güvenli yanıt**',
+                },
+              }
+            ],
+          }),
+        ),
+        200,
+        headers: {'content-type': 'application/json; charset=utf-8'},
+      );
+    });
+
+    final result = await AiService(client: client).reply(
+      history: history,
+      settings: const AppSettings(
+        provider: AiProvider.groq,
+        apiKeys: {'groq': 'groq-test-key'},
+        endpoint: 'https://api.groq.com/openai/v1/chat/completions',
+        model: 'llama-test',
+      ),
+    );
+
+    expect(result, '**Güvenli yanıt**');
+    expect(result, isNot(contains('<think>')));
+    expect(result, isNot(contains('<analysis>')));
+  });
+
 
   test('DNS/socket hatası kullanıcıya network failure olarak taşınır', () async {
     final client = MockClient((_) async {

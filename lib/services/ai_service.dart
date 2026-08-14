@@ -78,6 +78,19 @@ class AiServiceException implements Exception {
 class AiService {
   const AiService({this._client});
 
+  static final RegExp _reasoningBlockPattern = RegExp(
+    r'<\s*(think|thinking|analysis|reasoning|thought)\b[^>]*>[\s\S]*?<\s*/\s*\1\s*>',
+    caseSensitive: false,
+  );
+  static final RegExp _reasoningTagPattern = RegExp(
+    r'</?\s*(?:think|thinking|analysis|reasoning|thought)\b[^>]*>',
+    caseSensitive: false,
+  );
+  static final RegExp _unclosedReasoningStartPattern = RegExp(
+    r'<\s*(?:think|thinking|analysis|reasoning|thought)\b[^>]*>',
+    caseSensitive: false,
+  );
+
   final http.Client? _client;
 
   http.Client get _httpClient => _client ?? http.Client();
@@ -224,7 +237,10 @@ class AiService {
     final decoded = _decodeResponse(response.body, settings);
     _throwIfFailed(response, decoded, settings);
     final content = decoded?['choices']?[0]?['message']?['content'];
-    if (content is String && content.trim().isNotEmpty) return content.trim();
+    if (content is String) {
+      final visibleText = _visibleAssistantText(content);
+      if (visibleText.isNotEmpty) return visibleText;
+    }
     throw AiServiceException(
       kind: AiFailureKind.decoding,
       provider: settings.provider,
@@ -286,7 +302,8 @@ class AiService {
       final parts = content is Map ? content['parts'] : null;
       if (parts is List) {
         final text = parts.whereType<Map>().map((part) => part['text']).whereType<String>().join();
-        if (text.trim().isNotEmpty) return text.trim();
+        final visibleText = _visibleAssistantText(text);
+        if (visibleText.isNotEmpty) return visibleText;
       }
     }
     throw AiServiceException(
@@ -350,7 +367,8 @@ class AiService {
           .map((block) => block['text'])
           .whereType<String>()
           .join();
-      if (text.trim().isNotEmpty) return text.trim();
+      final visibleText = _visibleAssistantText(text);
+      if (visibleText.isNotEmpty) return visibleText;
     }
     throw AiServiceException(
       kind: AiFailureKind.decoding,
@@ -423,6 +441,20 @@ class AiService {
       statusCode: response.statusCode,
       message: message?.toString() ?? 'HTTP ${response.statusCode} yanıtı alındı.',
     );
+  }
+
+  String _visibleAssistantText(String rawText) {
+    var visibleText = rawText.replaceAll(_reasoningBlockPattern, '');
+
+    final unclosedStart = _unclosedReasoningStartPattern.firstMatch(visibleText);
+    if (unclosedStart != null) {
+      visibleText = visibleText.substring(0, unclosedStart.start);
+    }
+
+    return visibleText
+        .replaceAll(_reasoningTagPattern, '')
+        .replaceAll(RegExp(r'\n{3,}'), '\n\n')
+        .trim();
   }
 
   String _demoReply(String prompt, AiProvider provider) {

@@ -54,3 +54,9 @@ Final Android release APK `versionName 1.4.0`, `versionCode 6` olarak üretildi.
 Görsel attachment gönderilmeden önce seçili sağlayıcı ve modelin görüntü desteği denetlenir. Groq içinde `llama-3.3-70b-versatile` gibi metin odaklı modeller ağ isteği yapılmadan engellenir; kullanıcı, tekrar denemek yerine doğrudan görsel destekleyen model seçimine yönlendirilir. Groq `llama-3.2-11b-vision-preview` gibi uyumlu modeller için istek gövdesi OpenAI uyumlu çok parçalı `content` alanıyla üretilir.
 
 `flutter analyze` temiz geçti ve toplam 10 test başarıyla tamamlandı. Final Android APK `versionName 1.4.1`, `versionCode 7` olarak üretildi. Paket içinde `INTERNET`, `RECORD_AUDIO` ve `CAMERA` izinleri doğrulandı; APK v2 imzası geçerli. SHA-256: `b360f253482e79d0b85a9ea61712b561e91a80894bf1863ea13b7a15f92d2a8c`.
+
+## İç düşünce filtresi ve monokrom tema QA (1.4.2)
+
+OpenAI uyumlu sağlayıcılar, Gemini ve Anthropic yanıtları ekranda gösterilmeden önce işlenir. `<think>`, `<thinking>`, `<analysis>`, `<reasoning>` ve `<thought>` blokları ile tek başına kalan etiketleri temizlenir; Markdown içeren görünür yanıt korunur. Uygulamanın merkezi renk tokenları siyah, beyaz ve nötr gri tonlarına dönüştürüldü; önceki mor, cyan, yeşil ve kırmızı vurgu renkleri kaldırıldı.
+
+`flutter analyze` temiz geçti ve toplam 12 test başarıyla tamamlandı. Final Android APK `versionName 1.4.2`, `versionCode 8` olarak üretildi. Paket içinde `INTERNET`, `RECORD_AUDIO` ve `CAMERA` izinleri doğrulandı; APK v2 imzası geçerli. SHA-256: `9bd9b7266d2854c0ef61fda5d85201718a32943022a03219bbcbb17f2d4f0dcd`.

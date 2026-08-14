@@ -224,7 +224,10 @@ class _HomeScreenState extends State<HomeScreen> {
           TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Vazgeç')),
           FilledButton(
             onPressed: () => Navigator.pop(dialogContext, true),
-            style: FilledButton.styleFrom(backgroundColor: Colors.redAccent),
+            style: FilledButton.styleFrom(
+              backgroundColor: OxygenForgeTheme.error,
+              foregroundColor: Colors.black,
+            ),
             child: const Text('Temizle'),
           ),
         ],
@@ -440,7 +443,7 @@ class _HomeScreenState extends State<HomeScreen> {
               label: const Text('Yeni çalışma'),
               style: FilledButton.styleFrom(
                 backgroundColor: OxygenForgeTheme.violet,
-                foregroundColor: Colors.white,
+                foregroundColor: Colors.black,
                 padding: const EdgeInsets.symmetric(vertical: 13),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(13)),
               ),
@@ -675,9 +678,9 @@ class _MinimalHeader extends StatelessWidget {
                 onPressed: () => Scaffold.of(context).openDrawer(),
                 tooltip: 'Menüyü aç',
                 style: IconButton.styleFrom(
-                  backgroundColor: const Color(0xFF202020),
+                  backgroundColor: OxygenForgeTheme.panelRaised,
                   foregroundColor: Colors.white,
-                  side: const BorderSide(color: Color(0xFF3A3A3A)),
+                  side: const BorderSide(color: OxygenForgeTheme.line),
                   padding: const EdgeInsets.all(14),
                 ),
                 icon: const Icon(Icons.menu_rounded, size: 23),
@@ -690,9 +693,9 @@ class _MinimalHeader extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 11),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF202020),
+                  color: OxygenForgeTheme.panelRaised,
                   borderRadius: BorderRadius.circular(28),
-                  border: Border.all(color: const Color(0xFF3A3A3A)),
+                  border: Border.all(color: OxygenForgeTheme.line),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -716,9 +719,9 @@ class _MinimalHeader extends StatelessWidget {
               onPressed: onSettings,
               tooltip: 'Bağlantılar',
               style: IconButton.styleFrom(
-                backgroundColor: const Color(0xFF202020),
+                backgroundColor: OxygenForgeTheme.panelRaised,
                 foregroundColor: Colors.white,
-                side: const BorderSide(color: Color(0xFF3A3A3A)),
+                side: const BorderSide(color: OxygenForgeTheme.line),
                 padding: const EdgeInsets.all(14),
               ),
               icon: const Icon(Icons.blur_circular_rounded, size: 24),
@@ -751,9 +754,9 @@ class _WelcomeView extends StatelessWidget {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(18),
                   gradient: const ForgeGradient(),
-                  boxShadow: const [BoxShadow(color: Color(0x3D8B5CF6), blurRadius: 30, offset: Offset(0, 10))],
+                  boxShadow: const [BoxShadow(color: Color(0x33FFFFFF), blurRadius: 30, offset: Offset(0, 10))],
                 ),
-                child: const Icon(Icons.bolt_rounded, color: Colors.white, size: 32),
+                child: const Icon(Icons.bolt_rounded, color: Colors.black, size: 32),
               ),
               const SizedBox(height: 25),
               ShaderMask(
@@ -1040,7 +1043,7 @@ class _Composer extends StatelessWidget {
                     tooltip: 'Gönder',
                     style: IconButton.styleFrom(
                       backgroundColor: OxygenForgeTheme.violet,
-                      foregroundColor: Colors.white,
+                      foregroundColor: Colors.black,
                       disabledBackgroundColor: OxygenForgeTheme.line,
                       disabledForegroundColor: OxygenForgeTheme.muted,
                       padding: const EdgeInsets.all(12),

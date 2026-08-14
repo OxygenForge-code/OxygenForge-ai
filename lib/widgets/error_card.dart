@@ -55,7 +55,7 @@ class ErrorCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.black26,
+                color: OxygenForgeTheme.text.withValues(alpha: 0.06),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
@@ -82,7 +82,7 @@ class ErrorCard extends StatelessWidget {
                   label: const Text('Görsel destekleyen model seç'),
                   style: FilledButton.styleFrom(
                     backgroundColor: OxygenForgeTheme.violet,
-                    foregroundColor: Colors.white,
+                    foregroundColor: Colors.black,
                     padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
                 ),
@@ -110,7 +110,7 @@ class ErrorCard extends StatelessWidget {
                       label: const Text('Tekrar dene'),
                       style: FilledButton.styleFrom(
                         backgroundColor: OxygenForgeTheme.error.withValues(alpha: 0.8),
-                        foregroundColor: Colors.white,
+                        foregroundColor: Colors.black,
                         padding: const EdgeInsets.symmetric(vertical: 12),
                       ),
                     ),

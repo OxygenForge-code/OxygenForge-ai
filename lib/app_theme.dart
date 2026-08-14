@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 
 class OxygenForgeTheme {
-  static const ink = Color(0xFF0B0D12);
-  static const panel = Color(0xFF13161E);
-  static const panelRaised = Color(0xFF191D27);
-  static const line = Color(0xFF292E3A);
-  static const muted = Color(0xFF858C9A);
-  static const text = Color(0xFFF6F7FB);
-  static const violet = Color(0xFF8B5CF6);
-  static const violetBright = Color(0xFFA78BFA);
-  static const cyan = Color(0xFF67E8F9);
-  static const green = Color(0xFF6EE7B7);
-  static const error = Color(0xFFF87171);
+  static const ink = Colors.black;
+  static const panel = Color(0xFF080808);
+  static const panelRaised = Color(0xFF111111);
+  static const line = Color(0xFF3A3A3A);
+  static const muted = Color(0xFFB8B8B8);
+  static const text = Colors.white;
+  static const violet = Colors.white;
+  static const violetBright = Colors.white;
+  static const cyan = Colors.white;
+  static const green = Colors.white;
+  static const error = Colors.white;
 
   static ThemeData build() {
     final base = ThemeData.dark(useMaterial3: true);
@@ -24,7 +24,7 @@ class OxygenForgeTheme {
         primary: violetBright,
         secondary: cyan,
         onSurface: text,
-        onPrimary: Colors.white,
+        onPrimary: Colors.black,
         outline: line,
         error: error,
       ),
@@ -78,7 +78,7 @@ class ForgeGradient extends LinearGradient {
   const ForgeGradient({
     super.begin = Alignment.topLeft,
     super.end = Alignment.bottomRight,
-    super.colors = const [OxygenForgeTheme.violet, OxygenForgeTheme.cyan],
+    super.colors = const [Colors.white, Colors.white],
   });
 }
 

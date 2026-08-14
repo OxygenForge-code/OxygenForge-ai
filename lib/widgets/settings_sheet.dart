@@ -210,7 +210,7 @@ class _SettingsSheetState extends State<SettingsSheet> {
                   label: const Text('Profilleri kaydet'),
                   style: FilledButton.styleFrom(
                     backgroundColor: OxygenForgeTheme.violet,
-                    foregroundColor: Colors.white,
+                    foregroundColor: Colors.black,
                     padding: const EdgeInsets.symmetric(vertical: 15),
                   ),
                 ),
@@ -439,7 +439,7 @@ class _ProfileEditorSheetState extends State<ProfileEditorSheet> {
                     onPressed: _save,
                     icon: const Icon(Icons.save_rounded),
                     label: const Text('Profili kaydet'),
-                    style: FilledButton.styleFrom(backgroundColor: OxygenForgeTheme.violet, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 15)),
+                    style: FilledButton.styleFrom(backgroundColor: OxygenForgeTheme.violet, foregroundColor: Colors.black, padding: const EdgeInsets.symmetric(vertical: 15)),
                   ),
                 ),
               ],
