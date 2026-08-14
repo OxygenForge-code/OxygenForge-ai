@@ -94,3 +94,9 @@ OpenAI uyumlu sağlayıcılarda `Authorization: Bearer ...` ve `messages[]` söz
 Sohbet başlığında aktif sağlayıcı ve model görünür. Son AI yanıtı tek tuşla yeniden üretilebilir, sohbet Markdown olarak panoya aktarılabilir ve asistan yanıtı ayrı olarak kopyalanabilir. Ayarlar paneli sistem promptu ve yaratıcılık sıcaklığını da yönetir.
 
 Çok sağlayıcılı API doğrulama notları `provider_docs_notes.md` dosyasında tutulur.
+
+## Material 3 ve bağlantı kurtarma
+
+Arayüz Material 3 tema tokenları, yüzey katmanları, `CardThemeData`, modern butonlar, alt sayfalar, snackbar ve bağlantı kartlarıyla yenilenmiştir. Sağlayıcı bağlantısı başarısız olduğunda uygulama artık ham exception metnini tek satırlık snackbar'a sıkıştırmak yerine hatayı sınıflandırılmış bir kartta gösterir.
+
+Groq ekran görüntüsündeki `SocketFailed` ve `Failed host lookup` durumu artık **Bağlantı kurulamadı** başlığıyla, DNS/internet kontrol önerisiyle ve **Tekrar dene** / **Ayarları kontrol et** aksiyonlarıyla gösterilir. Kimlik doğrulama, rate limit, geçersiz istek, sunucu ve JSON çözümleme hataları da ayrı kullanıcı mesajlarına ayrılır.

@@ -11,6 +11,7 @@ class OxygenForgeTheme {
   static const violetBright = Color(0xFFA78BFA);
   static const cyan = Color(0xFF67E8F9);
   static const green = Color(0xFF6EE7B7);
+  static const error = Color(0xFFF87171);
 
   static ThemeData build() {
     final base = ThemeData.dark(useMaterial3: true);
@@ -18,16 +19,27 @@ class OxygenForgeTheme {
       scaffoldBackgroundColor: ink,
       colorScheme: const ColorScheme.dark(
         surface: ink,
+        surfaceContainer: panel,
+        surfaceContainerHigh: panelRaised,
         primary: violetBright,
         secondary: cyan,
         onSurface: text,
         onPrimary: Colors.white,
         outline: line,
+        error: error,
       ),
       textTheme: base.textTheme.apply(
         bodyColor: text,
         displayColor: text,
         fontFamily: 'Inter',
+      ),
+      cardTheme: CardThemeData(
+        color: panel,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: const BorderSide(color: line),
+        ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
@@ -54,6 +66,10 @@ class OxygenForgeTheme {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         behavior: SnackBarBehavior.floating,
       ),
+      navigationDrawerTheme: NavigationDrawerThemeData(
+        backgroundColor: panel,
+        indicatorColor: violet.withValues(alpha: 0.15),
+      ),
     );
   }
 }
@@ -72,11 +88,13 @@ class GlassCard extends StatelessWidget {
     super.key,
     this.padding = const EdgeInsets.all(20),
     this.color,
+    this.borderColor,
   });
 
   final Widget child;
   final EdgeInsetsGeometry padding;
   final Color? color;
+  final Color? borderColor;
 
   @override
   Widget build(BuildContext context) {
@@ -85,7 +103,7 @@ class GlassCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: color ?? OxygenForgeTheme.panel,
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: OxygenForgeTheme.line),
+        border: Border.all(color: borderColor ?? OxygenForgeTheme.line),
       ),
       child: child,
     );

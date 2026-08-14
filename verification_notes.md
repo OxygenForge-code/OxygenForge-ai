@@ -14,3 +14,7 @@
 Çok sağlayıcılı servis katmanı mock HTTP testleriyle doğrulandı. OpenAI uyumlu Groq request/response eşlemesi, Gemini `generateContent` eşlemesi ve Anthropic Messages API header/response eşlemesi başarıyla test edildi. `flutter analyze` temiz geçti ve toplam dört widget/servis testi başarıyla tamamlandı.
 
 Arayüzde sağlayıcı seçimi, sağlayıcı bazlı anahtar saklama, model ve endpoint düzenleme, sistem promptu, sıcaklık ayarı, mesaj kopyalama, sohbeti Markdown olarak panoya aktarma ve son yanıtı yeniden üretme kontrolleri eklendi.
+
+## Kullanıcı hata görüntüsü
+
+1080×198 piksel, yatay ve iki örtüşen parça halinde incelenen ekran görüntüsünde şu hata doğrulandı: `Bağlantı kurulamadı: ClientException with SocketFailed host lookup: 'api.groq.com' (OS Error: No address associated with hostname, ...)`. Bu, uygulama isteği göndermeden önce `api.groq.com` alan adının cihaz/sandbox DNS çözümlemesinde başarısız olduğunu gösterir; bu nedenle arayüzde hata türü, sağlayıcı, yeniden deneme ve endpoint kontrolü görünür hale getirilecektir.

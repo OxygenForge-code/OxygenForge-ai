@@ -94,4 +94,27 @@ void main() {
 
     expect(result, 'Claude yanıtı');
   });
+
+
+  test('DNS/socket hatası kullanıcıya network failure olarak taşınır', () async {
+    final client = MockClient((_) async {
+      throw http.ClientException("Failed host lookup: 'api.groq.com'");
+    });
+
+    expect(
+      () => AiService(client: client).reply(
+        history: history,
+        settings: const AppSettings(
+          provider: AiProvider.groq,
+          apiKeys: {'groq': 'groq-test-key'},
+          endpoint: 'https://api.groq.com/openai/v1/chat/completions',
+        ),
+      ),
+      throwsA(
+        isA<AiServiceException>()
+            .having((error) => error.kind, 'kind', AiFailureKind.network)
+            .having((error) => error.title, 'title', 'Bağlantı kurulamadı'),
+      ),
+    );
+  });
 }

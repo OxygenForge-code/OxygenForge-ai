@@ -5,6 +5,7 @@ import '../app_theme.dart';
 import '../models/chat_models.dart';
 import '../services/ai_service.dart';
 import '../services/local_store.dart';
+import '../widgets/error_card.dart';
 import '../widgets/forge_logo.dart';
 import '../widgets/message_bubble.dart';
 import '../widgets/settings_sheet.dart';
@@ -28,6 +29,7 @@ class _HomeScreenState extends State<HomeScreen> {
   String? _selectedSessionId;
   bool _isLoading = true;
   bool _isTyping = false;
+  AiServiceException? _lastError;
 
   ChatSession? get _selectedSession {
     for (final session in _sessions) {
@@ -131,9 +133,7 @@ class _HomeScreenState extends State<HomeScreen> {
       await _store.saveSessions(_sessions);
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Bağlantı kurulamadı: ${_friendlyError(error)}')),
-      );
+      setState(() => _lastError = _asAiException(error));
     } finally {
       if (mounted) {
         setState(() => _isTyping = false);
@@ -160,10 +160,15 @@ class _HomeScreenState extends State<HomeScreen> {
     return clean.length > 30 ? '${clean.substring(0, 30)}…' : clean;
   }
 
-  String _friendlyError(Object error) {
-    final text = error.toString().replaceFirst('Exception: ', '').replaceFirst('FormatException: ', '');
-    return text.length > 110 ? '${text.substring(0, 110)}…' : text;
+  AiServiceException _asAiException(Object error) {
+    if (error is AiServiceException) return error;
+    return AiServiceException(
+      kind: AiFailureKind.unknown,
+      provider: _settings.provider,
+      message: error.toString().replaceFirst('Exception: ', '').replaceFirst('FormatException: ', ''),
+    );
   }
+
 
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -257,6 +262,7 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       session.messages.removeAt(lastAssistantIndex);
       _isTyping = true;
+      _lastError = null;
     });
     await _store.saveSessions(_sessions);
     try {
@@ -281,15 +287,28 @@ class _HomeScreenState extends State<HomeScreen> {
       await _store.saveSessions(_sessions);
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Yeniden üretilemedi: ${_friendlyError(error)}')),
-      );
+      setState(() => _lastError = _asAiException(error));
     } finally {
       if (mounted) {
         setState(() => _isTyping = false);
         _scrollToBottom();
       }
     }
+  }
+
+  Future<void> _retryLastPrompt() async {
+    final session = _selectedSession;
+    if (session == null || _isTyping) return;
+    final userIndex = session.messages.lastIndexWhere((message) => message.role == MessageRole.user);
+    if (userIndex < 0) return;
+    final prompt = session.messages[userIndex].text;
+    setState(() {
+      session.messages.removeAt(userIndex);
+      _lastError = null;
+    });
+    _composerController.text = prompt;
+    _composerController.selection = TextSelection.collapsed(offset: prompt.length);
+    await _sendMessage();
   }
 
   @override
@@ -431,12 +450,19 @@ class _HomeScreenState extends State<HomeScreen> {
     return ListView.builder(
       controller: _scrollController,
       padding: const EdgeInsets.fromLTRB(24, 32, 24, 18),
-      itemCount: messages.length + (_isTyping ? 1 : 0),
+      itemCount: messages.length + (_isTyping ? 1 : 0) + (_lastError != null ? 1 : 0),
       itemBuilder: (context, index) {
         if (_isTyping && index == messages.length) {
           return const Padding(
             padding: EdgeInsets.only(left: 0, bottom: 22),
             child: TypingBubble(),
+          );
+        }
+        if (_lastError != null && index == messages.length + (_isTyping ? 1 : 0)) {
+          return ErrorCard(
+            exception: _lastError!,
+            onRetry: _retryLastPrompt,
+            onSettings: _openSettings,
           );
         }
         return MessageBubble(message: messages[index]);
