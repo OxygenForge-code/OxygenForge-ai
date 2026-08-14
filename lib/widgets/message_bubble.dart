@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../app_theme.dart';
 import '../models/chat_models.dart';
@@ -19,11 +20,7 @@ class MessageBubble extends StatelessWidget {
       child: ConstrainedBox(
         constraints: BoxConstraints(maxWidth: maxWidth),
         child: Padding(
-          padding: EdgeInsets.only(
-            left: isUser ? 52 : 0,
-            right: isUser ? 0 : 52,
-            bottom: 20,
-          ),
+          padding: EdgeInsets.only(left: isUser ? 52 : 0, right: isUser ? 0 : 52, bottom: 20),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
@@ -32,7 +29,7 @@ class MessageBubble extends StatelessWidget {
               if (!isUser) const SizedBox(width: 12),
               Flexible(
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 17, vertical: 14),
+                  padding: const EdgeInsets.fromLTRB(17, 14, 11, 10),
                   decoration: BoxDecoration(
                     color: isUser ? OxygenForgeTheme.violet.withValues(alpha: 0.18) : OxygenForgeTheme.panel,
                     borderRadius: BorderRadius.only(
@@ -45,9 +42,44 @@ class MessageBubble extends StatelessWidget {
                       color: isUser ? OxygenForgeTheme.violet.withValues(alpha: 0.35) : OxygenForgeTheme.line,
                     ),
                   ),
-                  child: SelectableText(
-                    message.text,
-                    style: const TextStyle(fontSize: 14.5, height: 1.55, color: OxygenForgeTheme.text),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SelectableText(
+                        message.text,
+                        style: const TextStyle(fontSize: 14.5, height: 1.55, color: OxygenForgeTheme.text),
+                      ),
+                      if (!isUser && message.provider != null) ...[
+                        const SizedBox(height: 10),
+                        Row(
+                          children: [
+                            Icon(Icons.auto_awesome_rounded, size: 12, color: OxygenForgeTheme.violetBright),
+                            const SizedBox(width: 5),
+                            Expanded(
+                              child: Text(
+                                '${message.provider!.label}  ·  ${message.model ?? message.provider!.defaultModel}',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(color: OxygenForgeTheme.muted, fontSize: 10.5),
+                              ),
+                            ),
+                            IconButton(
+                              onPressed: () async {
+                                await Clipboard.setData(ClipboardData(text: message.text));
+                                if (!context.mounted) return;
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Mesaj panoya kopyalandı.')),
+                                );
+                              },
+                              tooltip: 'Kopyala',
+                              icon: const Icon(Icons.copy_rounded, size: 15, color: OxygenForgeTheme.muted),
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(minWidth: 26, minHeight: 26),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ],
                   ),
                 ),
               ),
@@ -107,8 +139,7 @@ class _DotState extends State<_Dot> with SingleTickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 700))
-      ..forward();
+    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 700))..forward();
   }
 
   @override

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../app_theme.dart';
 import '../models/chat_models.dart';
@@ -6,6 +7,7 @@ import '../services/ai_service.dart';
 import '../services/local_store.dart';
 import '../widgets/forge_logo.dart';
 import '../widgets/message_bubble.dart';
+import '../widgets/settings_sheet.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -120,6 +122,8 @@ class _HomeScreenState extends State<HomeScreen> {
             role: MessageRole.assistant,
             text: response,
             createdAt: DateTime.now(),
+            provider: _settings.provider,
+            model: _settings.effectiveModel,
           ),
         );
         session.updatedAt = DateTime.now();
@@ -173,11 +177,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _openSettings() async {
-    final apiKeyController = TextEditingController(text: _settings.apiKey);
-    final endpointController = TextEditingController(text: _settings.endpoint);
-    final modelController = TextEditingController(text: _settings.model);
-
-    await showModalBottomSheet<void>(
+    final next = await showModalBottomSheet<AppSettings>(
       context: context,
       isScrollControlled: true,
       backgroundColor: OxygenForgeTheme.panel,
@@ -185,97 +185,15 @@ class _HomeScreenState extends State<HomeScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
-      builder: (sheetContext) {
-        return Padding(
-          padding: EdgeInsets.fromLTRB(24, 14, 24, MediaQuery.viewInsetsOf(sheetContext).bottom + 24),
-          child: SingleChildScrollView(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 680),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Center(
-                    child: Container(
-                      width: 42,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: OxygenForgeTheme.line,
-                        borderRadius: BorderRadius.circular(99),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  const Text('Bağlantı ayarları', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Anahtar cihazında yerel olarak saklanır. Üretim uygulamalarında anahtarı güvenli bir sunucu üzerinden yönlendirmen önerilir.',
-                    style: TextStyle(color: OxygenForgeTheme.muted, height: 1.45),
-                  ),
-                  const SizedBox(height: 22),
-                  TextField(
-                    controller: apiKeyController,
-                    obscureText: true,
-                    decoration: const InputDecoration(
-                      labelText: 'API anahtarı',
-                      hintText: 'sk-…',
-                      prefixIcon: Icon(Icons.key_rounded),
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  TextField(
-                    controller: endpointController,
-                    keyboardType: TextInputType.url,
-                    decoration: const InputDecoration(
-                      labelText: 'OpenAI uyumlu endpoint',
-                      prefixIcon: Icon(Icons.link_rounded),
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  TextField(
-                    controller: modelController,
-                    decoration: const InputDecoration(
-                      labelText: 'Model',
-                      hintText: 'gpt-4o-mini',
-                      prefixIcon: Icon(Icons.auto_awesome_rounded),
-                    ),
-                  ),
-                  const SizedBox(height: 22),
-                  SizedBox(
-                    width: double.infinity,
-                    child: FilledButton.icon(
-                      onPressed: () async {
-                        final next = AppSettings(
-                          apiKey: apiKeyController.text.trim(),
-                          endpoint: endpointController.text.trim(),
-                          model: modelController.text.trim(),
-                        );
-                        await _store.saveSettings(next);
-                        if (!mounted || !sheetContext.mounted) return;
-                        setState(() => _settings = next);
-                        Navigator.of(sheetContext).pop();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Bağlantı ayarları kaydedildi.')),
-                        );
-                      },
-                      icon: const Icon(Icons.save_rounded),
-                      label: const Text('Ayarları kaydet'),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: OxygenForgeTheme.violet,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 15),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
+      builder: (_) => SettingsSheet(initial: _settings),
     );
-    apiKeyController.dispose();
-    endpointController.dispose();
-    modelController.dispose();
+    if (!mounted || next == null) return;
+    await _store.saveSettings(next);
+    if (!mounted) return;
+    setState(() => _settings = next);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('${next.provider.label} bağlantısı kaydedildi.')),
+    );
   }
 
   Future<void> _clearSessions() async {
@@ -307,6 +225,71 @@ class _HomeScreenState extends State<HomeScreen> {
     _composerController.text = prompt;
     _composerController.selection = TextSelection.collapsed(offset: prompt.length);
     _composerFocusNode.requestFocus();
+  }
+
+  Future<void> _exportCurrentSession() async {
+    final session = _selectedSession;
+    if (session == null || session.messages.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Dışa aktarmak için önce bir mesaj gönder.')),
+      );
+      return;
+    }
+    final buffer = StringBuffer('# ${session.title}\n\n');
+    for (final message in session.messages) {
+      final speaker = message.role == MessageRole.user ? 'Sen' : 'OxygenForge AI';
+      buffer.writeln('**$speaker**');
+      buffer.writeln(message.text);
+      buffer.writeln();
+    }
+    await Clipboard.setData(ClipboardData(text: buffer.toString()));
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Sohbet Markdown olarak panoya kopyalandı.')),
+    );
+  }
+
+  Future<void> _regenerateLast() async {
+    final session = _selectedSession;
+    if (session == null || session.messages.isEmpty || _isTyping) return;
+    final lastAssistantIndex = session.messages.lastIndexWhere((message) => message.role == MessageRole.assistant);
+    if (lastAssistantIndex < 0) return;
+    setState(() {
+      session.messages.removeAt(lastAssistantIndex);
+      _isTyping = true;
+    });
+    await _store.saveSessions(_sessions);
+    try {
+      final response = await _aiService.reply(
+        history: List<ChatMessage>.of(session.messages),
+        settings: _settings,
+      );
+      if (!mounted) return;
+      setState(() {
+        session.messages.add(
+          ChatMessage(
+            id: DateTime.now().microsecondsSinceEpoch.toString(),
+            role: MessageRole.assistant,
+            text: response,
+            createdAt: DateTime.now(),
+            provider: _settings.provider,
+            model: _settings.effectiveModel,
+          ),
+        );
+        session.updatedAt = DateTime.now();
+      });
+      await _store.saveSessions(_sessions);
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Yeniden üretilemedi: ${_friendlyError(error)}')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isTyping = false);
+        _scrollToBottom();
+      }
+    }
   }
 
   @override
@@ -397,6 +380,7 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 16),
           _ConnectionCard(
             connected: _settings.apiKey.isNotEmpty,
+            provider: _settings.provider,
             onTap: _openSettings,
           ),
           const SizedBox(height: 12),
@@ -420,9 +404,12 @@ class _HomeScreenState extends State<HomeScreen> {
         _WorkspaceHeader(
           isCompact: isCompact,
           title: session?.title ?? 'Yeni çalışma',
-          model: _settings.model,
+          model: _settings.effectiveModel,
+          provider: _settings.provider,
           connected: _settings.apiKey.isNotEmpty,
           onSettings: _openSettings,
+          onExport: _exportCurrentSession,
+          onRegenerate: _regenerateLast,
         ),
         Expanded(child: _buildConversation(session)),
         _Composer(
@@ -463,15 +450,21 @@ class _WorkspaceHeader extends StatelessWidget {
     required this.isCompact,
     required this.title,
     required this.model,
+    required this.provider,
     required this.connected,
     required this.onSettings,
+    required this.onExport,
+    required this.onRegenerate,
   });
 
   final bool isCompact;
   final String title;
   final String model;
+  final AiProvider provider;
   final bool connected;
   final VoidCallback onSettings;
+  final VoidCallback onExport;
+  final VoidCallback onRegenerate;
 
   @override
   Widget build(BuildContext context) {
@@ -506,7 +499,7 @@ class _WorkspaceHeader extends StatelessWidget {
                     Icon(Icons.auto_awesome_rounded, size: 13, color: connected ? OxygenForgeTheme.green : OxygenForgeTheme.violetBright),
                     const SizedBox(width: 5),
                     Text(
-                      connected ? model : 'Demo motoru',
+                      connected ? '${provider.label}  ·  $model' : '${provider.label} demo motoru',
                       style: const TextStyle(color: OxygenForgeTheme.muted, fontSize: 11.5),
                     ),
                   ],
@@ -515,7 +508,17 @@ class _WorkspaceHeader extends StatelessWidget {
             ),
           ),
           ModePill(label: connected ? 'Bağlı' : 'Demo mod', connected: connected),
-          const SizedBox(width: 12),
+          const SizedBox(width: 6),
+          IconButton(
+            onPressed: onRegenerate,
+            tooltip: 'Son yanıtı yeniden üret',
+            icon: const Icon(Icons.refresh_rounded, color: OxygenForgeTheme.muted),
+          ),
+          IconButton(
+            onPressed: onExport,
+            tooltip: 'Sohbeti kopyala',
+            icon: const Icon(Icons.ios_share_rounded, color: OxygenForgeTheme.muted),
+          ),
           IconButton(
             onPressed: onSettings,
             tooltip: 'Ayarlar',
@@ -818,9 +821,10 @@ class _SessionTile extends StatelessWidget {
 }
 
 class _ConnectionCard extends StatelessWidget {
-  const _ConnectionCard({required this.connected, required this.onTap});
+  const _ConnectionCard({required this.connected, required this.provider, required this.onTap});
 
   final bool connected;
+  final AiProvider provider;
   final VoidCallback onTap;
 
   @override
@@ -844,7 +848,7 @@ class _ConnectionCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(connected ? 'API bağlı' : 'Demo modu', style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w800)),
+                  Text(connected ? '${provider.label} bağlı' : '${provider.label} demo', style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w800)),
                   const SizedBox(height: 3),
                   Text(connected ? 'Gerçek model hazır' : 'Anahtar eklemek için aç', style: const TextStyle(color: OxygenForgeTheme.muted, fontSize: 10.5)),
                 ],

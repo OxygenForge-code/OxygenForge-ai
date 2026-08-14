@@ -70,3 +70,27 @@ Proje üzerinde `flutter analyze`, `flutter test` ve `flutter build web --releas
 ## GitHub
 
 Proje, [OxygenForge-code/OxygenForge-ai](https://github.com/OxygenForge-code/OxygenForge-ai) repository'si temel alınarak oluşturulmuştur.
+
+## Çok sağlayıcılı AI desteği
+
+OxygenForge AI artık tek bir sağlayıcıya bağlı değildir. Ayarlar panelinden sağlayıcı ve model seçilebilir; her sağlayıcının anahtarı ayrı olarak yerel depolamada tutulur. Sağlayıcı değiştirildiğinde endpoint ve varsayılan model otomatik doldurulur, ancak istersen her alanı değiştirebilirsin.
+
+| Sağlayıcı | Entegrasyon biçimi | Varsayılan model |
+| --- | --- | --- |
+| OpenAI | Chat Completions | `gpt-4o-mini` |
+| Google Gemini | Native `generateContent` | `gemini-2.5-flash` |
+| Groq | OpenAI uyumlu | `llama-3.3-70b-versatile` |
+| OpenRouter | OpenAI uyumlu model router'ı | `openai/gpt-4o-mini` |
+| Anthropic | Native Messages API | `claude-3-5-haiku-latest` |
+| Mistral | OpenAI uyumlu | `mistral-small-latest` |
+| Together AI | OpenAI uyumlu | `meta-llama/Llama-3.3-70B-Instruct-Turbo` |
+| DeepSeek | OpenAI uyumlu | `deepseek-chat` |
+| Custom API | Özel OpenAI uyumlu endpoint | `your-model` |
+
+OpenAI uyumlu sağlayıcılarda `Authorization: Bearer ...` ve `messages[]` sözleşmesi kullanılır. Gemini için native `contents[]` ve `candidates[]` eşlemesi; Anthropic için `x-api-key`, `anthropic-version` ve native `content[]` eşlemesi uygulanır. Sağlayıcı adaptörleri ağ çağrısını test etmek için mock HTTP testleriyle doğrulanmıştır.
+
+## Ek üretkenlik özellikleri
+
+Sohbet başlığında aktif sağlayıcı ve model görünür. Son AI yanıtı tek tuşla yeniden üretilebilir, sohbet Markdown olarak panoya aktarılabilir ve asistan yanıtı ayrı olarak kopyalanabilir. Ayarlar paneli sistem promptu ve yaratıcılık sıcaklığını da yönetir.
+
+Çok sağlayıcılı API doğrulama notları `provider_docs_notes.md` dosyasında tutulur.

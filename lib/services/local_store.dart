@@ -6,9 +6,10 @@ import '../models/chat_models.dart';
 
 class LocalStore {
   static const _sessionsKey = 'oxygenforge.sessions.v1';
-  static const _apiKeyKey = 'oxygenforge.api_key';
-  static const _endpointKey = 'oxygenforge.endpoint';
-  static const _modelKey = 'oxygenforge.model';
+  static const _settingsKey = 'oxygenforge.settings.v2';
+  static const _legacyApiKey = 'oxygenforge.api_key';
+  static const _legacyEndpoint = 'oxygenforge.endpoint';
+  static const _legacyModel = 'oxygenforge.model';
 
   Future<List<ChatSession>> loadSessions() async {
     final preferences = await SharedPreferences.getInstance();
@@ -37,19 +38,51 @@ class LocalStore {
 
   Future<AppSettings> loadSettings() async {
     final preferences = await SharedPreferences.getInstance();
+    final encoded = preferences.getString(_settingsKey);
+    if (encoded != null && encoded.isNotEmpty) {
+      try {
+        final decoded = jsonDecode(encoded);
+        if (decoded is Map) {
+          final json = Map<String, dynamic>.from(decoded);
+          final rawKeys = json['apiKeys'];
+          return AppSettings(
+            provider: aiProviderFromName(json['provider'] as String?),
+            apiKeys: rawKeys is Map
+                ? rawKeys.map((key, value) => MapEntry(key.toString(), value.toString()))
+                : <String, String>{},
+            endpoint: json['endpoint'] as String? ?? '',
+            model: json['model'] as String? ?? '',
+            temperature: (json['temperature'] as num?)?.toDouble() ?? 0.7,
+            systemPrompt: json['systemPrompt'] as String? ?? AppSettings().systemPrompt,
+          );
+        }
+      } catch (_) {
+        // Fall through to the legacy migration below.
+      }
+    }
+
+    final legacyKey = preferences.getString(_legacyApiKey) ?? '';
+    final legacyEndpoint = preferences.getString(_legacyEndpoint) ?? '';
+    final legacyModel = preferences.getString(_legacyModel) ?? '';
     return AppSettings(
-      apiKey: preferences.getString(_apiKeyKey) ?? '',
-      endpoint: preferences.getString(_endpointKey) ?? 'https://api.openai.com/v1/chat/completions',
-      model: preferences.getString(_modelKey) ?? 'gpt-4o-mini',
+      apiKeys: legacyKey.isEmpty ? <String, String>{} : <String, String>{AiProvider.openai.name: legacyKey},
+      endpoint: legacyEndpoint,
+      model: legacyModel,
     );
   }
 
   Future<void> saveSettings(AppSettings settings) async {
     final preferences = await SharedPreferences.getInstance();
-    await Future.wait([
-      preferences.setString(_apiKeyKey, settings.apiKey),
-      preferences.setString(_endpointKey, settings.endpoint),
-      preferences.setString(_modelKey, settings.model),
-    ]);
+    await preferences.setString(
+      _settingsKey,
+      jsonEncode({
+        'provider': settings.provider.name,
+        'apiKeys': settings.apiKeys,
+        'endpoint': settings.endpoint,
+        'model': settings.model,
+        'temperature': settings.temperature,
+        'systemPrompt': settings.systemPrompt,
+      }),
+    );
   }
 }
