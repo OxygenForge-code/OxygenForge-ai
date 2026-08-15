@@ -35,3 +35,9 @@
 - [x] Mobil çalışma alanına hızlı komutlar ve oturum özeti ekle
 - [x] Yeni üretkenlik akışları için model, depolama ve widget regresyon testleri ekle
 - [x] Üretkenlik araçları güncellemesi için release APK derle ve doğrula
+- [x] Oturum notlarını ve görevlerini kalıcı sohbet verisine ekle
+- [x] Son AI yanıtındaki adımlardan tek dokunuşla görev çıkarma ekle
+- [x] Görev kontrol listesi ve oturum notu düzenleyicisi içeren çalışma panosu ekle
+- [x] Yeni çalışma ve sohbet işlemlerini açan komut merkezi ekle
+- [x] İleri çalışma alanı araçları için model, depolama ve widget regresyon testleri ekle
+- [x] İleri çalışma alanı güncellemesi için release APK derle ve doğrula

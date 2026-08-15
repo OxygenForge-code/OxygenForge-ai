@@ -86,3 +86,9 @@ Sıfırlanma sonrası Flutter, Android SDK ve Java geliştirme araç zinciri yen
 Çalışma listesine oturum başlığı ve mesaj içeriği üzerinden arama eklendi. Oturumlar kalıcı şekilde sabitlenebilir; uzun basma veya işlem menüsü üzerinden yeniden adlandırılabilir ve silinebilir. Sabitlenmiş çalışmalar güncellenme zamanından önce sıralanır. Sohbet alanı yeni çalışma, dışa aktarma, bağlantı, kamera ve görsel ekleme hızlı komutları ile oturumdaki mesaj/AI yanıtı sayısını ve ölçülen toplam model bekleme süresini gösteren bir özet kartı içerir.
 
 `flutter analyze` temiz geçti ve toplam 17 test başarıyla tamamlandı. Final Android APK `versionName 1.4.6`, `versionCode 12` olarak üretildi. Paket içinde `INTERNET`, `RECORD_AUDIO` ve `CAMERA` izinleri doğrulandı; APK v2 imzası geçerli. SHA-256: `4b705a8002283fbdbdcf37767b5b5ecc3061da7c8bf0f435c11b4d0876983ebd`.
+
+## Komut merkezi ve çalışma panosu QA (1.4.7)
+
+Her çalışma artık kalıcı notlara ve görev listesine sahiptir. Çalışma panosu not düzenleme, görev ekleme, görevi tamamlama ve silme akışlarını içerir. Son AI yanıtı numaralı ya da madde işaretli adımlar içeriyorsa, `Görev çıkar` komutu en fazla sekiz benzersiz adımı kaynak mesaja bağlı görevler olarak ekler. Komut merkezi; yeni çalışma, çalışma panosu, görev çıkarma, dışa aktarma ve API profil yönetimi işlemlerini arama alanıyla bir araya getirir.
+
+`flutter analyze` temiz geçti ve toplam 17 test başarıyla tamamlandı. Final Android APK `versionName 1.4.7`, `versionCode 13` olarak üretildi. Paket içinde `INTERNET`, `RECORD_AUDIO` ve `CAMERA` izinleri doğrulandı; APK v2 imzası geçerli. SHA-256: `cda4da3318b9e6f520ad3732e8d94451d8fcbedc6619aa6bb482ba894caaaa51`.

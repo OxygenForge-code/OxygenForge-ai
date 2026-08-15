@@ -229,6 +229,243 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Future<void> _openWorkspaceBoard() async {
+    final session = _selectedSession;
+    if (session == null) {
+      _newSession();
+      return;
+    }
+    final notesController = TextEditingController(text: session.notes);
+    final taskController = TextEditingController();
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: OxygenForgeTheme.panel,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (context, setSheetState) {
+          final completed = session.tasks.where((task) => task.isCompleted).length;
+          return SafeArea(
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(18, 12, 18, 18 + MediaQuery.viewInsetsOf(context).bottom),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(child: Container(width: 42, height: 4, decoration: BoxDecoration(color: OxygenForgeTheme.line, borderRadius: BorderRadius.circular(99)))),
+                    const SizedBox(height: 18),
+                    const Text('ÇALIŞMA PANOSU', style: TextStyle(color: OxygenForgeTheme.muted, fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 1.4)),
+                    const SizedBox(height: 5),
+                    Text(session.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
+                    const SizedBox(height: 20),
+                    const Text('NOTLAR', style: TextStyle(color: OxygenForgeTheme.muted, fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 1.2)),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: notesController,
+                      minLines: 3,
+                      maxLines: 6,
+                      decoration: const InputDecoration(hintText: 'Bu çalışma için kısa notlarını yaz...'),
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      children: [
+                        const Text('GÖREVLER', style: TextStyle(color: OxygenForgeTheme.muted, fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 1.2)),
+                        const Spacer(),
+                        Text('$completed/${session.tasks.length} tamamlandı', style: const TextStyle(color: OxygenForgeTheme.muted, fontSize: 11)),
+                      ],
+                    ),
+                    const SizedBox(height: 7),
+                    if (session.tasks.isEmpty)
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 12),
+                        child: Text('Henüz görev yok. Son yanıttan görev çıkarabilir veya aşağıdan ekleyebilirsin.', style: TextStyle(color: OxygenForgeTheme.muted, fontSize: 12, height: 1.4)),
+                      )
+                    else
+                      ...session.tasks.map(
+                        (task) => CheckboxListTile(
+                          value: task.isCompleted,
+                          contentPadding: EdgeInsets.zero,
+                          controlAffinity: ListTileControlAffinity.leading,
+                          title: Text(task.title, style: TextStyle(decoration: task.isCompleted ? TextDecoration.lineThrough : null, color: task.isCompleted ? OxygenForgeTheme.muted : OxygenForgeTheme.text, fontSize: 13)),
+                          secondary: IconButton(
+                            onPressed: () {
+                              setState(() {
+                                session.tasks.remove(task);
+                                session.updatedAt = DateTime.now();
+                              });
+                              _store.saveSessions(_sessions);
+                              setSheetState(() {});
+                            },
+                            icon: const Icon(Icons.close_rounded, size: 17),
+                            tooltip: 'Görevi sil',
+                          ),
+                          onChanged: (value) {
+                            setState(() {
+                              task.isCompleted = value ?? false;
+                              session.updatedAt = DateTime.now();
+                            });
+                            _store.saveSessions(_sessions);
+                            setSheetState(() {});
+                          },
+                        ),
+                      ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: taskController,
+                            textInputAction: TextInputAction.done,
+                            decoration: const InputDecoration(hintText: 'Yeni görev ekle'),
+                            onSubmitted: (_) => _addBoardTask(session, taskController, setSheetState),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        IconButton.filled(
+                          onPressed: () => _addBoardTask(session, taskController, setSheetState),
+                          icon: const Icon(Icons.add_rounded),
+                          tooltip: 'Görev ekle',
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 18),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton.icon(
+                        onPressed: () async {
+                          final notes = notesController.text.trim();
+                          setState(() {
+                            session.notes = notes;
+                            session.updatedAt = DateTime.now();
+                          });
+                          await _store.saveSessions(_sessions);
+                          if (context.mounted) Navigator.pop(context);
+                        },
+                        icon: const Icon(Icons.save_rounded),
+                        label: const Text('Notları kaydet'),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+    notesController.dispose();
+    taskController.dispose();
+  }
+
+  void _addBoardTask(ChatSession session, TextEditingController controller, StateSetter setSheetState) {
+    final title = controller.text.replaceAll(RegExp(r'\s+'), ' ').trim();
+    if (title.isEmpty) return;
+    setState(() {
+      session.tasks.add(WorkspaceTask(id: DateTime.now().microsecondsSinceEpoch.toString(), title: title, createdAt: DateTime.now()));
+      session.updatedAt = DateTime.now();
+    });
+    controller.clear();
+    _store.saveSessions(_sessions);
+    setSheetState(() {});
+  }
+
+  Future<void> _extractTasksFromLastAnswer() async {
+    final session = _selectedSession;
+    if (session == null) return;
+    final assistantIndex = session.messages.lastIndexWhere((message) => message.role == MessageRole.assistant);
+    if (assistantIndex < 0) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Önce AI’dan bir yanıt al.')));
+      return;
+    }
+    final source = session.messages[assistantIndex];
+    final candidateLines = source.text.split('\n').map((line) => line.trim()).where((line) {
+      return RegExp(r'^(?:[-*•]|\d+[.)])\s+').hasMatch(line) || RegExp(r'^\[[ xX]\]\s+').hasMatch(line);
+    });
+    final existing = session.tasks.map((task) => task.title.toLowerCase()).toSet();
+    final extracted = <String>[];
+    for (final line in candidateLines) {
+      final title = line.replaceFirst(RegExp(r'^(?:[-*•]|\d+[.)])\s*(?:\[[ xX]\]\s*)?'), '').trim();
+      if (title.length < 3 || existing.contains(title.toLowerCase()) || extracted.any((item) => item.toLowerCase() == title.toLowerCase())) continue;
+      extracted.add(title);
+      if (extracted.length == 8) break;
+    }
+    if (extracted.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Son yanıtta görev olarak çıkarılacak madde bulunamadı.')));
+      return;
+    }
+    setState(() {
+      for (final title in extracted) {
+        session.tasks.add(WorkspaceTask(
+          id: '${DateTime.now().microsecondsSinceEpoch}-${session.tasks.length}',
+          title: title,
+          createdAt: DateTime.now(),
+          sourceMessageId: source.id,
+        ));
+      }
+      session.updatedAt = DateTime.now();
+    });
+    await _store.saveSessions(_sessions);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${extracted.length} görev çalışma panosuna eklendi.')));
+  }
+
+  Future<void> _openCommandCenter() async {
+    final searchController = TextEditingController();
+    var query = '';
+    final commands = <({String label, String subtitle, IconData icon, VoidCallback action})>[
+      (label: 'Yeni çalışma', subtitle: 'Boş bir AI çalışma alanı aç', icon: Icons.add_rounded, action: _newSession),
+      (label: 'Çalışma panosu', subtitle: 'Notları ve görevleri yönet', icon: Icons.dashboard_customize_rounded, action: _openWorkspaceBoard),
+      (label: 'Son yanıttan görev çıkar', subtitle: 'Madde adımlarını kontrol listesine ekle', icon: Icons.auto_fix_high_rounded, action: _extractTasksFromLastAnswer),
+      (label: 'Sohbeti dışa aktar', subtitle: 'Geçerli oturumu Markdown olarak kopyala', icon: Icons.ios_share_rounded, action: _exportCurrentSession),
+      (label: 'API profilleri', subtitle: 'Sağlayıcı ve model bağlantılarını yönet', icon: Icons.tune_rounded, action: _openSettings),
+    ];
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: OxygenForgeTheme.panel,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (context, setSheetState) {
+          final visible = commands.where((command) {
+            final normalized = query.toLowerCase();
+            return command.label.toLowerCase().contains(normalized) || command.subtitle.toLowerCase().contains(normalized);
+          }).toList();
+          return SafeArea(
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(18, 12, 18, 20 + MediaQuery.viewInsetsOf(context).bottom),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Center(child: Container(width: 42, height: 4, decoration: BoxDecoration(color: OxygenForgeTheme.line, borderRadius: BorderRadius.circular(99)))),
+                  const SizedBox(height: 18),
+                  TextField(
+                    controller: searchController,
+                    autofocus: true,
+                    onChanged: (value) => setSheetState(() => query = value.trim()),
+                    decoration: const InputDecoration(prefixIcon: Icon(Icons.search_rounded), hintText: 'Komut ara...'),
+                  ),
+                  const SizedBox(height: 12),
+                  ...visible.map((command) => ListTile(
+                        leading: Icon(command.icon),
+                        title: Text(command.label, style: const TextStyle(fontWeight: FontWeight.w700)),
+                        subtitle: Text(command.subtitle),
+                        trailing: const Icon(Icons.arrow_forward_rounded, size: 18),
+                        onTap: () {
+                          Navigator.pop(sheetContext);
+                          command.action();
+                        },
+                      )),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+    searchController.dispose();
+  }
+
   Future<void> _sendMessage() async {
     final selectedAttachment = _attachment;
     final typedPrompt = _composerController.text.trim();
@@ -725,6 +962,7 @@ class _HomeScreenState extends State<HomeScreen> {
               provider: _settings.provider,
               connected: _settings.apiKey.isNotEmpty,
               onSettings: _openSettings,
+              onCommandCenter: _openCommandCenter,
               onExport: _exportCurrentSession,
               onRegenerate: _regenerateLast,
             ),
@@ -732,6 +970,8 @@ class _HomeScreenState extends State<HomeScreen> {
             _QuickActions(
               onNewSession: _newSession,
               onExport: _exportCurrentSession,
+              onBoard: _openWorkspaceBoard,
+              onExtractTasks: _extractTasksFromLastAnswer,
               onProviders: _openSettings,
               onCamera: () => _pickImage(ImageSource.camera),
               onGallery: () => _pickImage(ImageSource.gallery),
@@ -803,6 +1043,7 @@ class _WorkspaceHeader extends StatelessWidget {
     required this.provider,
     required this.connected,
     required this.onSettings,
+    required this.onCommandCenter,
     required this.onExport,
     required this.onRegenerate,
   });
@@ -815,13 +1056,14 @@ class _WorkspaceHeader extends StatelessWidget {
   final AiProvider provider;
   final bool connected;
   final VoidCallback onSettings;
+  final VoidCallback onCommandCenter;
   final VoidCallback onExport;
   final VoidCallback onRegenerate;
 
   @override
   Widget build(BuildContext context) {
     if (minimal) {
-      return _MinimalHeader(profileName: profileName, onSettings: onSettings);
+      return _MinimalHeader(profileName: profileName, onSettings: onSettings, onCommandCenter: onCommandCenter);
     }
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
@@ -890,6 +1132,11 @@ class _WorkspaceHeader extends StatelessWidget {
           ),
           ModePill(label: connected ? 'Anahtar hazır' : 'Demo mod', connected: connected),
           const SizedBox(width: 6),
+          IconButton(
+            onPressed: onCommandCenter,
+            tooltip: 'Komut merkezi',
+            icon: const Icon(Icons.keyboard_command_key_rounded, color: OxygenForgeTheme.text),
+          ),
           IconButton(
             onPressed: onRegenerate,
             tooltip: 'Son yanıtı yeniden üret',
@@ -972,10 +1219,15 @@ class _SessionSummary extends StatelessWidget {
 }
 
 class _MinimalHeader extends StatelessWidget {
-  const _MinimalHeader({required this.profileName, required this.onSettings});
+  const _MinimalHeader({
+    required this.profileName,
+    required this.onSettings,
+    required this.onCommandCenter,
+  });
 
   final String profileName;
   final VoidCallback onSettings;
+  final VoidCallback onCommandCenter;
 
   @override
   Widget build(BuildContext context) {
@@ -1028,15 +1280,15 @@ class _MinimalHeader extends StatelessWidget {
             ),
             const Spacer(),
             IconButton.filledTonal(
-                onPressed: onSettings,
-                tooltip: 'Bağlantılar',
+                onPressed: onCommandCenter,
+                tooltip: 'Komut merkezi',
                 style: IconButton.styleFrom(
                   backgroundColor: const Color(0x1CFFFFFF),
                   foregroundColor: Colors.white,
                   side: const BorderSide(color: Color(0x36FFFFFF)),
                 padding: const EdgeInsets.all(14),
               ),
-              icon: const Icon(Icons.blur_circular_rounded, size: 24),
+              icon: const Icon(Icons.keyboard_command_key_rounded, size: 24),
             ),
           ],
         ),
@@ -1228,6 +1480,8 @@ class _QuickActions extends StatelessWidget {
   const _QuickActions({
     required this.onNewSession,
     required this.onExport,
+    required this.onBoard,
+    required this.onExtractTasks,
     required this.onProviders,
     required this.onCamera,
     required this.onGallery,
@@ -1235,6 +1489,8 @@ class _QuickActions extends StatelessWidget {
 
   final VoidCallback onNewSession;
   final VoidCallback onExport;
+  final VoidCallback onBoard;
+  final VoidCallback onExtractTasks;
   final VoidCallback onProviders;
   final VoidCallback onCamera;
   final VoidCallback onGallery;
@@ -1250,6 +1506,10 @@ class _QuickActions extends StatelessWidget {
           _QuickActionChip(icon: Icons.add_rounded, label: 'Yeni çalışma', onPressed: onNewSession),
           const SizedBox(width: 8),
           _QuickActionChip(icon: Icons.ios_share_rounded, label: 'Dışa aktar', onPressed: onExport),
+          const SizedBox(width: 8),
+          _QuickActionChip(icon: Icons.dashboard_customize_rounded, label: 'Çalışma panosu', onPressed: onBoard),
+          const SizedBox(width: 8),
+          _QuickActionChip(icon: Icons.auto_fix_high_rounded, label: 'Görev çıkar', onPressed: onExtractTasks),
           const SizedBox(width: 8),
           _QuickActionChip(icon: Icons.hub_rounded, label: 'Bağlantılar', onPressed: onProviders),
           const SizedBox(width: 8),

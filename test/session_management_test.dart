@@ -13,12 +13,21 @@ void main() {
       createdAt: now,
       updatedAt: now,
       isPinned: isPinned,
+      notes: 'Teklif dosyasını cuma günü gözden geçir.',
       messages: <ChatMessage>[
         ChatMessage(
           id: '$id-message',
           role: MessageRole.user,
           text: 'Yeni ürün stratejisini planla.',
           createdAt: now,
+        ),
+      ],
+      tasks: <WorkspaceTask>[
+        WorkspaceTask(
+          id: '$id-task',
+          title: 'Rakipleri karşılaştır',
+          createdAt: now,
+          sourceMessageId: '$id-message',
         ),
       ],
     );
@@ -32,6 +41,9 @@ void main() {
     expect(restored.title, 'Ürün stratejisi');
     expect(restored.isPinned, isTrue);
     expect(restored.messages.single.text, 'Yeni ürün stratejisini planla.');
+    expect(restored.notes, 'Teklif dosyasını cuma günü gözden geçir.');
+    expect(restored.tasks.single.title, 'Rakipleri karşılaştır');
+    expect(restored.tasks.single.sourceMessageId, 'pinned-message');
   });
 
   test('eski oturum kayıtları sabitlenmemiş olarak güvenle yüklenir', () {
@@ -44,6 +56,8 @@ void main() {
     });
 
     expect(restored.isPinned, isFalse);
+    expect(restored.notes, isEmpty);
+    expect(restored.tasks, isEmpty);
   });
 
   test('sabitlenmiş oturum cihazda kaydedilip yeniden yüklenir', () async {
@@ -56,5 +70,7 @@ void main() {
     expect(restored, hasLength(1));
     expect(restored.single.isPinned, isTrue);
     expect(restored.single.messages, hasLength(1));
+    expect(restored.single.notes, 'Teklif dosyasını cuma günü gözden geçir.');
+    expect(restored.single.tasks.single.title, 'Rakipleri karşılaştır');
   });
 }

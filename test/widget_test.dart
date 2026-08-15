@@ -13,8 +13,9 @@ void main() {
     expect(find.text('Bugün ne\nüreteceğiz?'), findsOneWidget);
     expect(find.text('OXYGENFORGE / ÇALIŞMA ALANI'), findsOneWidget);
     expect(find.text('Yeni çalışma'), findsOneWidget);
-    expect(find.text('Bağlantılar'), findsOneWidget);
-    expect(find.text('Kamera'), findsOneWidget);
+    expect(find.text('Dışa aktar'), findsOneWidget);
+    expect(find.text('Çalışma panosu'), findsOneWidget);
+    expect(find.text('Görev çıkar'), findsOneWidget);
     expect(find.byType(FrostedPanel), findsWidgets);
     expect(find.text('Ask OxygenForge AI…'), findsOneWidget);
   });

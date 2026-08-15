@@ -194,6 +194,40 @@ class ChatMessage {
   }
 }
 
+class WorkspaceTask {
+  WorkspaceTask({
+    required this.id,
+    required this.title,
+    required this.createdAt,
+    this.isCompleted = false,
+    this.sourceMessageId,
+  });
+
+  final String id;
+  String title;
+  final DateTime createdAt;
+  bool isCompleted;
+  final String? sourceMessageId;
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'title': title,
+        'createdAt': createdAt.toIso8601String(),
+        'isCompleted': isCompleted,
+        'sourceMessageId': sourceMessageId,
+      };
+
+  factory WorkspaceTask.fromJson(Map<String, dynamic> json) {
+    return WorkspaceTask(
+      id: json['id'] as String? ?? DateTime.now().microsecondsSinceEpoch.toString(),
+      title: json['title'] as String? ?? 'Yeni görev',
+      createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ?? DateTime.now(),
+      isCompleted: json['isCompleted'] as bool? ?? false,
+      sourceMessageId: json['sourceMessageId'] as String?,
+    );
+  }
+}
+
 class ChatSession {
   ChatSession({
     required this.id,
@@ -201,15 +235,20 @@ class ChatSession {
     required this.createdAt,
     required this.updatedAt,
     this.isPinned = false,
+    this.notes = '',
     List<ChatMessage>? messages,
-  }) : messages = messages ?? <ChatMessage>[];
+    List<WorkspaceTask>? tasks,
+  })  : messages = messages ?? <ChatMessage>[],
+        tasks = tasks ?? <WorkspaceTask>[];
 
   final String id;
   String title;
   final DateTime createdAt;
   DateTime updatedAt;
   bool isPinned;
+  String notes;
   final List<ChatMessage> messages;
+  final List<WorkspaceTask> tasks;
 
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -217,23 +256,33 @@ class ChatSession {
         'createdAt': createdAt.toIso8601String(),
         'updatedAt': updatedAt.toIso8601String(),
         'isPinned': isPinned,
+        'notes': notes,
         'messages': messages.map((message) => message.toJson()).toList(),
+        'tasks': tasks.map((task) => task.toJson()).toList(),
       };
 
   factory ChatSession.fromJson(Map<String, dynamic> json) {
     final rawMessages = json['messages'];
+    final rawTasks = json['tasks'];
     return ChatSession(
       id: json['id'] as String? ?? DateTime.now().microsecondsSinceEpoch.toString(),
       title: json['title'] as String? ?? 'Yeni çalışma',
       createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ?? DateTime.now(),
       updatedAt: DateTime.tryParse(json['updatedAt'] as String? ?? '') ?? DateTime.now(),
       isPinned: json['isPinned'] as bool? ?? false,
+      notes: json['notes'] as String? ?? '',
       messages: rawMessages is List
           ? rawMessages
               .whereType<Map>()
               .map((message) => ChatMessage.fromJson(Map<String, dynamic>.from(message)))
               .toList()
           : <ChatMessage>[],
+      tasks: rawTasks is List
+          ? rawTasks
+              .whereType<Map>()
+              .map((task) => WorkspaceTask.fromJson(Map<String, dynamic>.from(task)))
+              .toList()
+          : <WorkspaceTask>[],
     );
   }
 }
