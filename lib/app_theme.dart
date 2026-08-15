@@ -8,6 +8,10 @@ class OxygenForgeTheme {
   static const referenceSurface = Color(0xFF242424);
   static const referenceSurfacePressed = Color(0xFF303030);
   static const referenceBlue = Color(0xFF3A7BFF);
+  static const referenceBlueBright = Color(0xFF6DA4FF);
+  static const referenceBlueSoft = Color(0x263A7BFF);
+  static const referenceDeep = Color(0xFF0F0F12);
+  static const referenceHighlight = Color(0x14FFFFFF);
   static const glass = Color(0xC90B0B0B);
   static const glassSoft = Color(0x9C121212);
   static const glassEdge = Color(0x42FFFFFF);
