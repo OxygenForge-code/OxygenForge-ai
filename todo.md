@@ -57,3 +57,7 @@
 - [x] Tekrar etmeyen mesaj görünümü için widget regresyon testleri ekle
 - [x] Mobil başlık, özet, hızlı aksiyonlar ve boş durum görünümünü daha sade bilgi hiyerarşisine dönüştür
 - [x] Sadeleştirilmiş mobil deneyim için release APK derle, doğrula ve teslim et
+- [x] Referanstaki üst kontrol şeridi, aksiyon listesi ve büyük oluşturucu düzenini OxygenForge mobil sohbetine uygula
+- [x] Sohbet çekmecesi, komut merkezi, çalışma panosu, misyon kontrolü ve ayar yüzeylerini aynı minimal siyah tasarım sistemiyle birleştir
+- [x] Referans tasarımlı arayüzde mesaj metninin yeniden canlanmadığını widget regresyonlarıyla doğrula
+- [x] Referans arayüz sürümü için Android release APK derle, doğrula ve teslim et

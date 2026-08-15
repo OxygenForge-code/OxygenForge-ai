@@ -1465,7 +1465,7 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           _WorkspaceHeader(
             isCompact: isCompact,
-            minimal: isCompact,
+            minimal: true,
             title: session?.title ?? 'Yeni çalışma',
             profileName: _settings.activeProfile.name,
             model: _settings.effectiveModel,
@@ -1848,58 +1848,87 @@ class _MinimalHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(8, 8, 8, 6),
-      child: SizedBox(
-        height: 54,
-        child: Row(
-          children: [
-            Builder(
-              builder: (context) => IconButton(
-                onPressed: () => Scaffold.of(context).openDrawer(),
-                tooltip: 'Menüyü aç',
-                icon: const Icon(Icons.menu_rounded),
-              ),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+      child: Row(
+        children: [
+          Builder(
+            builder: (context) => _ReferenceCircleButton(
+              icon: Icons.menu_rounded,
+              tooltip: 'Menüyü aç',
+              onPressed: () => Scaffold.of(context).openDrawer(),
             ),
-            const SizedBox(width: 4),
-            Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                    ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Material(
+              color: OxygenForgeTheme.referenceSurface,
+              borderRadius: BorderRadius.circular(999),
+              child: InkWell(
+                onTap: onSettings,
+                borderRadius: BorderRadius.circular(999),
+                child: Container(
+                  height: 56,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(color: OxygenForgeTheme.line),
                   ),
-                  Text(
-                    connected
-                        ? '${provider.label} · $model'
-                        : '$profileName · Demo mod',
+                  alignment: Alignment.center,
+                  child: Text(
+                    connected ? provider.label : profileName,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       color: OxygenForgeTheme.muted,
-                      fontSize: 10.5,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
-                ],
+                ),
               ),
             ),
-            IconButton(
-              onPressed: onCommandCenter,
-              tooltip: 'Araçlar',
-              icon: const Icon(Icons.more_horiz_rounded),
+          ),
+          const SizedBox(width: 16),
+          _ReferenceCircleButton(
+            icon: Icons.chat_bubble_outline_rounded,
+            tooltip: 'Araçlar',
+            onPressed: onCommandCenter,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ReferenceCircleButton extends StatelessWidget {
+  const _ReferenceCircleButton({
+    required this.icon,
+    required this.tooltip,
+    required this.onPressed,
+  });
+
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        color: OxygenForgeTheme.referenceSurface,
+        shape: const CircleBorder(
+          side: BorderSide(color: OxygenForgeTheme.line),
+        ),
+        child: InkWell(
+          onTap: onPressed,
+          customBorder: const CircleBorder(),
+          child: SizedBox(
+            width: 56,
+            height: 56,
+            child: Center(
+              child: Icon(icon, size: 25, color: OxygenForgeTheme.text),
             ),
-            IconButton(
-              onPressed: onSettings,
-              tooltip: 'Ayarlar',
-              icon: const Icon(Icons.tune_rounded),
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -1914,53 +1943,41 @@ class _WelcomeView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: SingleChildScrollView(
-        padding: EdgeInsets.all(compact ? 24 : 40),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 520),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const ForgeLogo(),
-              const SizedBox(height: 22),
-              Text(
-                'Nasıl yardımcı olabilirim?',
-                style: TextStyle(
-                  fontSize: compact ? 28 : 34,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: -0.8,
-                ),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Bir mesaj yaz veya aşağıdan hızlı bir başlangıç seç.',
-                style: TextStyle(color: OxygenForgeTheme.muted, fontSize: 14),
-              ),
-              const SizedBox(height: 24),
-              _SimplePromptButton(
-                icon: Icons.code_rounded,
-                label: 'Kod veya analiz',
-                prompt: 'Şu kod problemini analiz et ve çözüm öner: ',
-                onTap: onPromptTap,
-              ),
-              const SizedBox(height: 10),
-              _SimplePromptButton(
-                icon: Icons.list_alt_rounded,
-                label: 'Plan oluştur',
-                prompt: 'Şu hedef için adım adım bir plan oluştur: ',
-                onTap: onPromptTap,
-              ),
-            ],
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: compact ? 54 : 80),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Spacer(flex: 5),
+          _ReferenceAction(
+            icon: Icons.image_outlined,
+            label: 'Görsel oluştur',
+            prompt: 'Bir görsel oluşturmak istiyorum: ',
+            onTap: onPromptTap,
           ),
-        ),
+          const SizedBox(height: 18),
+          _ReferenceAction(
+            icon: Icons.edit_outlined,
+            label: 'Yaz veya düzenle',
+            prompt: 'Şu metni daha açık ve etkili hale getir: ',
+            onTap: onPromptTap,
+          ),
+          const SizedBox(height: 18),
+          _ReferenceAction(
+            icon: Icons.travel_explore_rounded,
+            label: 'Web’de arama yap',
+            prompt: 'Bu konu hakkında web araştırması için güvenilir kaynaklar ve arama başlıkları öner: ',
+            onTap: onPromptTap,
+          ),
+          const Spacer(flex: 2),
+        ],
       ),
     );
   }
 }
 
-class _SimplePromptButton extends StatelessWidget {
-  const _SimplePromptButton({
+class _ReferenceAction extends StatelessWidget {
+  const _ReferenceAction({
     required this.icon,
     required this.label,
     required this.prompt,
@@ -1974,17 +1991,24 @@ class _SimplePromptButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      child: OutlinedButton.icon(
-        onPressed: () => onTap(prompt),
-        icon: Icon(icon, size: 18),
-        label: Text(label),
-        style: OutlinedButton.styleFrom(
-          alignment: Alignment.centerLeft,
-          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 14),
-          side: const BorderSide(color: OxygenForgeTheme.line),
-          foregroundColor: OxygenForgeTheme.text,
+    return InkWell(
+      onTap: () => onTap(prompt),
+      borderRadius: BorderRadius.circular(14),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 7),
+        child: Row(
+          children: [
+            Icon(icon, color: OxygenForgeTheme.muted, size: 34),
+            const SizedBox(width: 22),
+            Text(
+              label,
+              style: const TextStyle(
+                color: OxygenForgeTheme.muted,
+                fontSize: 19,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -2374,14 +2398,14 @@ class _Composer extends StatelessWidget {
     return SafeArea(
       top: false,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 6, 12, 10),
+        padding: const EdgeInsets.fromLTRB(30, 10, 30, 24),
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 820),
           child: Container(
-            padding: const EdgeInsets.fromLTRB(8, 7, 8, 7),
+            padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
             decoration: BoxDecoration(
-              color: const Color(0xFF121212),
-              borderRadius: BorderRadius.circular(18),
+              color: OxygenForgeTheme.referenceSurface,
+              borderRadius: BorderRadius.circular(999),
               border: Border.all(
                 color: isListening ? Colors.white : OxygenForgeTheme.line,
               ),
@@ -2412,10 +2436,10 @@ class _Composer extends StatelessWidget {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    IconButton(
+                    _ComposerControl(
                       onPressed: isTyping ? null : onGallery,
                       tooltip: 'Görsel ekle',
-                      icon: const Icon(Icons.add_rounded),
+                      icon: Icons.add_rounded,
                     ),
                     Expanded(
                       child: TextField(
@@ -2425,41 +2449,93 @@ class _Composer extends StatelessWidget {
                         maxLines: 5,
                         textInputAction: TextInputAction.newline,
                         onSubmitted: (_) => onSend(),
-                        style: const TextStyle(fontSize: 14),
+                        style: const TextStyle(fontSize: 16),
                         decoration: const InputDecoration(
-                          hintText: 'Mesaj yaz…',
+                          hintText: 'OxygenForge AI’ye sor',
                           border: InputBorder.none,
                           enabledBorder: InputBorder.none,
                           focusedBorder: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(vertical: 10),
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 15,
+                          ),
                         ),
                       ),
                     ),
-                    IconButton(
+                    _ComposerControl(
                       onPressed: isTyping ? null : onVoice,
                       tooltip: isListening ? 'Dinlemeyi durdur' : 'Sesli giriş',
-                      icon: Icon(
-                        isListening
-                            ? Icons.mic_rounded
-                            : Icons.mic_none_rounded,
-                      ),
+                      icon: isListening
+                          ? Icons.mic_rounded
+                          : Icons.mic_none_rounded,
                     ),
-                    IconButton.filled(
-                      onPressed: isTyping ? null : onSend,
-                      tooltip: 'Gönder',
-                      style: IconButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: Colors.black,
-                      ),
-                      icon: Icon(
-                        isTyping
-                            ? Icons.more_horiz_rounded
-                            : Icons.arrow_upward_rounded,
-                      ),
+                    ValueListenableBuilder<TextEditingValue>(
+                      valueListenable: controller,
+                      builder: (context, value, _) {
+                        final canSend =
+                            value.text.trim().isNotEmpty ||
+                            attachmentName != null;
+                        return _ComposerControl(
+                          onPressed: isTyping
+                              ? null
+                              : (canSend ? onSend : onVoice),
+                          tooltip: canSend ? 'Gönder' : 'Sesli giriş',
+                          icon: canSend
+                              ? Icons.arrow_upward_rounded
+                              : Icons.graphic_eq_rounded,
+                          background: OxygenForgeTheme.referenceBlue,
+                          foreground: Colors.white,
+                          size: 60,
+                        );
+                      },
                     ),
                   ],
                 ),
               ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ComposerControl extends StatelessWidget {
+  const _ComposerControl({
+    required this.onPressed,
+    required this.tooltip,
+    required this.icon,
+    this.background,
+    this.foreground,
+    this.size = 54,
+  });
+
+  final VoidCallback? onPressed;
+  final String tooltip;
+  final IconData icon;
+  final Color? background;
+  final Color? foreground;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        color: background ?? Colors.transparent,
+        shape: const CircleBorder(),
+        child: InkWell(
+          onTap: onPressed,
+          customBorder: const CircleBorder(),
+          child: SizedBox(
+            width: size,
+            height: size,
+            child: Center(
+              child: Icon(
+                icon,
+                size: 30,
+                color: foreground ?? OxygenForgeTheme.text,
+              ),
             ),
           ),
         ),

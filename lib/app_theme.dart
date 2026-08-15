@@ -1,12 +1,13 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 
 class OxygenForgeTheme {
   static const ink = Colors.black;
-  static const panel = Color(0xFF080808);
-  static const panelRaised = Color(0xFF111111);
-  static const line = Color(0xFF3A3A3A);
+  static const panel = Color(0xFF161616);
+  static const panelRaised = Color(0xFF242424);
+  static const line = Color(0xFF484848);
+  static const referenceSurface = Color(0xFF242424);
+  static const referenceSurfacePressed = Color(0xFF303030);
+  static const referenceBlue = Color(0xFF3A7BFF);
   static const glass = Color(0xC90B0B0B);
   static const glassSoft = Color(0x9C121212);
   static const glassEdge = Color(0x42FFFFFF);
@@ -54,15 +55,15 @@ class OxygenForgeTheme {
         hintStyle: const TextStyle(color: muted),
         labelStyle: const TextStyle(color: muted),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(28),
           borderSide: const BorderSide(color: line),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(28),
           borderSide: const BorderSide(color: line),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(28),
           borderSide: const BorderSide(color: violetBright, width: 1.2),
         ),
       ),
@@ -80,7 +81,9 @@ class OxygenForgeTheme {
       bottomSheetTheme: const BottomSheetThemeData(
         backgroundColor: panel,
         modalBackgroundColor: panel,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+        ),
       ),
     );
   }
@@ -114,29 +117,14 @@ class FrostedPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: borderRadius,
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
-        child: Container(
-          padding: padding,
-          decoration: BoxDecoration(
-            color: color ?? OxygenForgeTheme.glass,
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0x1FFFFFFF), Color(0x08000000), Color(0x14000000)],
-              stops: [0, 0.46, 1],
-            ),
-            borderRadius: borderRadius,
-            border: Border.all(color: borderColor ?? OxygenForgeTheme.glassEdgeSoft),
-            boxShadow: const [
-              BoxShadow(color: OxygenForgeTheme.softShadow, blurRadius: 26, offset: Offset(0, 13)),
-            ],
-          ),
-          child: child,
-        ),
+    return Container(
+      padding: padding,
+      decoration: BoxDecoration(
+        color: color ?? OxygenForgeTheme.referenceSurface,
+        borderRadius: borderRadius,
+        border: Border.all(color: borderColor ?? OxygenForgeTheme.line),
       ),
+      child: child,
     );
   }
 }
