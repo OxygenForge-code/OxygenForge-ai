@@ -80,3 +80,9 @@ Sohbet mesajları ve ayar kartları siyah-beyaz buzlu cam panel yapısına geçi
 Boş sohbet alanı artık mobil cihazlarda da ana ekranın çalışma alanı yaklaşımını sürdüren bir hero kartı, hızlı başlangıç önerileri ve gizlilik notu gösterir. Kompakt başlık, profil seçici ve bağlantı denetimleri yarı saydam siyah-beyaz yüzeylere uyarlandı. Geniş ekranda sohbet başlığı, yuvarlatılmış buzlu cam denetim çubuğu olarak sunulur; hızlı aksiyonlar Türkçeleştirildi ve öneri kartları ekran genişliğine göre tek veya iki sütuna yerleşir.
 
 Sıfırlanma sonrası Flutter, Android SDK ve Java geliştirme araç zinciri yeniden kuruldu. `flutter analyze` temiz geçti ve toplam 14 test başarıyla tamamlandı. Final Android APK `versionName 1.4.5`, `versionCode 11` olarak üretildi. Paket içinde `INTERNET`, `RECORD_AUDIO` ve `CAMERA` izinleri doğrulandı; APK v2 imzası geçerli. SHA-256: `993ea7ae10247576e89ade9e106b802acfbdb5840d26322a4a2d6371b2c3f1b5`.
+
+## Üretkenlik çalışma alanı QA (1.4.6)
+
+Çalışma listesine oturum başlığı ve mesaj içeriği üzerinden arama eklendi. Oturumlar kalıcı şekilde sabitlenebilir; uzun basma veya işlem menüsü üzerinden yeniden adlandırılabilir ve silinebilir. Sabitlenmiş çalışmalar güncellenme zamanından önce sıralanır. Sohbet alanı yeni çalışma, dışa aktarma, bağlantı, kamera ve görsel ekleme hızlı komutları ile oturumdaki mesaj/AI yanıtı sayısını ve ölçülen toplam model bekleme süresini gösteren bir özet kartı içerir.
+
+`flutter analyze` temiz geçti ve toplam 17 test başarıyla tamamlandı. Final Android APK `versionName 1.4.6`, `versionCode 12` olarak üretildi. Paket içinde `INTERNET`, `RECORD_AUDIO` ve `CAMERA` izinleri doğrulandı; APK v2 imzası geçerli. SHA-256: `4b705a8002283fbdbdcf37767b5b5ecc3061da7c8bf0f435c11b4d0876983ebd`.

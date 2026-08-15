@@ -30,3 +30,8 @@
 - [x] Mobil başlık, durum kartı ve oluşturucu alanını modernleştir
 - [x] Ana ekran uyumlu arayüz için widget ve tema regresyon testleri ekle
 - [x] Modern ana ekran uyumlu arayüz için release APK derle ve doğrula
+- [x] Sohbet geçmişinde başlık ve mesaj içeriğine göre arama ekle
+- [x] Oturumları yeniden adlandırma, sabitleme ve silme işlemleriyle yönetilebilir hale getir
+- [x] Mobil çalışma alanına hızlı komutlar ve oturum özeti ekle
+- [x] Yeni üretkenlik akışları için model, depolama ve widget regresyon testleri ekle
+- [x] Üretkenlik araçları güncellemesi için release APK derle ve doğrula

@@ -200,6 +200,7 @@ class ChatSession {
     required this.title,
     required this.createdAt,
     required this.updatedAt,
+    this.isPinned = false,
     List<ChatMessage>? messages,
   }) : messages = messages ?? <ChatMessage>[];
 
@@ -207,6 +208,7 @@ class ChatSession {
   String title;
   final DateTime createdAt;
   DateTime updatedAt;
+  bool isPinned;
   final List<ChatMessage> messages;
 
   Map<String, dynamic> toJson() => {
@@ -214,6 +216,7 @@ class ChatSession {
         'title': title,
         'createdAt': createdAt.toIso8601String(),
         'updatedAt': updatedAt.toIso8601String(),
+        'isPinned': isPinned,
         'messages': messages.map((message) => message.toJson()).toList(),
       };
 
@@ -224,6 +227,7 @@ class ChatSession {
       title: json['title'] as String? ?? 'Yeni çalışma',
       createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ?? DateTime.now(),
       updatedAt: DateTime.tryParse(json['updatedAt'] as String? ?? '') ?? DateTime.now(),
+      isPinned: json['isPinned'] as bool? ?? false,
       messages: rawMessages is List
           ? rawMessages
               .whereType<Map>()
