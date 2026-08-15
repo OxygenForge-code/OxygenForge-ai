@@ -13,6 +13,10 @@ void main() {
     expect(OxygenForgeTheme.cyan, Colors.white);
     expect(OxygenForgeTheme.green, Colors.white);
     expect(OxygenForgeTheme.error, Colors.white);
+    expect(OxygenForgeTheme.glass, const Color(0xC90B0B0B));
+    expect(OxygenForgeTheme.glassSoft, const Color(0x9C121212));
+    expect(OxygenForgeTheme.glassEdge, const Color(0x42FFFFFF));
+    expect(OxygenForgeTheme.glassEdgeSoft, const Color(0x24FFFFFF));
     expect(theme.scaffoldBackgroundColor, Colors.black);
     expect(theme.colorScheme.primary, Colors.white);
     expect(theme.colorScheme.onPrimary, Colors.black);

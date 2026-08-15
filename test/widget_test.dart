@@ -12,7 +12,7 @@ void main() {
 
     expect(find.text('Bugün ne\nüreteceğiz?'), findsOneWidget);
     expect(find.text('OXYGENFORGE / ÇALIŞMA ALANI'), findsOneWidget);
-    expect(find.text('Yeni çalışma'), findsOneWidget);
+    expect(find.text('Yeni çalışma'), findsAtLeastNWidgets(1));
     expect(find.text('Dışa aktar'), findsOneWidget);
     expect(find.text('Çalışma panosu'), findsOneWidget);
     expect(find.text('Görev çıkar'), findsOneWidget);

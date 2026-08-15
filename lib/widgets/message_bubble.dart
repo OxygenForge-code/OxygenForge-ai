@@ -18,10 +18,10 @@ class MessageBubble extends StatelessWidget {
     final reduceMotion = MediaQuery.disableAnimationsOf(context);
     final thinking = message.thinking?.trim();
     final bubbleRadius = BorderRadius.only(
-      topLeft: const Radius.circular(18),
-      topRight: const Radius.circular(18),
-      bottomLeft: Radius.circular(isUser ? 18 : 5),
-      bottomRight: Radius.circular(isUser ? 5 : 18),
+      topLeft: const Radius.circular(22),
+      topRight: const Radius.circular(22),
+      bottomLeft: Radius.circular(isUser ? 22 : 7),
+      bottomRight: Radius.circular(isUser ? 7 : 22),
     );
 
     return TweenAnimationBuilder<double>(
@@ -40,7 +40,7 @@ class MessageBubble extends StatelessWidget {
         child: ConstrainedBox(
           constraints: BoxConstraints(maxWidth: maxWidth),
           child: Padding(
-            padding: EdgeInsets.only(left: isUser ? 52 : 0, right: isUser ? 0 : 52, bottom: 20),
+            padding: EdgeInsets.only(left: isUser ? 46 : 0, right: isUser ? 0 : 46, bottom: 22),
             child: Column(
               crossAxisAlignment: isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
               children: [
@@ -54,17 +54,27 @@ class MessageBubble extends StatelessWidget {
                   mainAxisAlignment: isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
                   children: [
                     if (!isUser) const ForgeLogo(compact: true),
-                    if (!isUser) const SizedBox(width: 12),
+                    if (!isUser) const SizedBox(width: 10),
                     Flexible(
                       child: FrostedPanel(
-                        padding: const EdgeInsets.fromLTRB(17, 15, 11, 10),
+                        padding: const EdgeInsets.fromLTRB(17, 13, 12, 11),
                         borderRadius: bubbleRadius,
-                        blur: 22,
-                        color: isUser ? const Color(0x2EFFFFFF) : const Color(0xB50A0A0A),
-                        borderColor: isUser ? const Color(0x46FFFFFF) : const Color(0x2EFFFFFF),
+                        blur: 26,
+                        color: isUser ? const Color(0x35FFFFFF) : OxygenForgeTheme.glass,
+                        borderColor: isUser ? OxygenForgeTheme.glassEdge : OxygenForgeTheme.glassEdgeSoft,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        Row(
+                          children: [
+                            Icon(isUser ? Icons.person_outline_rounded : Icons.auto_awesome_rounded, size: 12, color: isUser ? Colors.white : OxygenForgeTheme.muted),
+                            const SizedBox(width: 5),
+                            Text(isUser ? 'SEN' : 'OXYGENFORGE', style: const TextStyle(color: OxygenForgeTheme.muted, fontSize: 9.5, fontWeight: FontWeight.w800, letterSpacing: 1.05)),
+                            const Spacer(),
+                            Text(_formatTime(message.createdAt), style: const TextStyle(color: OxygenForgeTheme.muted, fontSize: 9.5, fontWeight: FontWeight.w600)),
+                          ],
+                        ),
+                        const SizedBox(height: 9),
                         if (message.text.trim().isNotEmpty)
                           _ProgressiveMarkdown(
                             text: message.text,
@@ -132,9 +142,9 @@ class MessageBubble extends StatelessWidget {
   MarkdownStyleSheet _markdownStyle(BuildContext context) {
     final base = Theme.of(context).textTheme.bodyMedium ?? const TextStyle();
     return MarkdownStyleSheet(
-      p: base.copyWith(color: OxygenForgeTheme.text, fontSize: 14.5, height: 1.55),
-      strong: base.copyWith(color: OxygenForgeTheme.text, fontSize: 14.5, height: 1.55, fontWeight: FontWeight.w800),
-      em: base.copyWith(color: OxygenForgeTheme.violetBright, fontSize: 14.5, height: 1.55, fontStyle: FontStyle.italic),
+      p: base.copyWith(color: OxygenForgeTheme.text, fontSize: 14.8, height: 1.58),
+      strong: base.copyWith(color: OxygenForgeTheme.text, fontSize: 14.8, height: 1.58, fontWeight: FontWeight.w800),
+      em: base.copyWith(color: OxygenForgeTheme.violetBright, fontSize: 14.8, height: 1.58, fontStyle: FontStyle.italic),
       h1: base.copyWith(color: OxygenForgeTheme.text, fontSize: 23, height: 1.2, fontWeight: FontWeight.w800),
       h2: base.copyWith(color: OxygenForgeTheme.text, fontSize: 19, height: 1.25, fontWeight: FontWeight.w800),
       h3: base.copyWith(color: OxygenForgeTheme.text, fontSize: 16, height: 1.3, fontWeight: FontWeight.w800),
@@ -156,6 +166,12 @@ class MessageBubble extends StatelessWidget {
       blockSpacing: 10,
     );
   }
+
+  String _formatTime(DateTime value) {
+    final hour = value.hour.toString().padLeft(2, '0');
+    final minute = value.minute.toString().padLeft(2, '0');
+    return '$hour:$minute';
+  }
 }
 
 class _ThinkingDurationBadge extends StatelessWidget {
@@ -171,8 +187,8 @@ class _ThinkingDurationBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       borderRadius: BorderRadius.circular(999),
       blur: 12,
-      color: const Color(0x1AFFFFFF),
-      borderColor: const Color(0x38FFFFFF),
+      color: OxygenForgeTheme.glassSoft,
+      borderColor: OxygenForgeTheme.glassEdge,
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [

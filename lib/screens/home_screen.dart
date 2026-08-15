@@ -1053,6 +1053,21 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Stack(
             children: [
               Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: Container(
+                  height: 180,
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [Color(0x12FFFFFF), Color(0x00000000)],
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
                 top: -130,
                 right: -110,
                 child: Container(
@@ -1133,13 +1148,13 @@ class _HomeScreenState extends State<HomeScreen> {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(24, 14, 24, 0),
+          padding: EdgeInsets.fromLTRB(compact ? 16 : 24, compact ? 10 : 14, compact ? 16 : 24, 0),
           child: _SessionSummary(session: session!),
         ),
         Expanded(
           child: ListView.builder(
             controller: _scrollController,
-            padding: const EdgeInsets.fromLTRB(24, 18, 24, 18),
+            padding: EdgeInsets.fromLTRB(compact ? 16 : 24, compact ? 16 : 18, compact ? 16 : 24, 18),
             itemCount: messages.length + (_isTyping ? 1 : 0) + (_lastError != null ? 1 : 0),
             itemBuilder: (context, index) {
         if (_isTyping && index == messages.length) {
@@ -1194,7 +1209,15 @@ class _WorkspaceHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (minimal) {
-      return _MinimalHeader(profileName: profileName, onSettings: onSettings, onCommandCenter: onCommandCenter);
+      return _MinimalHeader(
+        title: title,
+        profileName: profileName,
+        provider: provider,
+        model: model,
+        connected: connected,
+        onSettings: onSettings,
+        onCommandCenter: onCommandCenter,
+      );
     }
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
@@ -1307,40 +1330,36 @@ class _SessionSummary extends StatelessWidget {
         ? '${totalThinking.inMilliseconds} ms'
         : '${(totalThinking.inMilliseconds / 1000).toStringAsFixed(1)} sn';
     return FrostedPanel(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-      borderRadius: BorderRadius.circular(18),
-      blur: 16,
-      color: const Color(0x8F0D0D0D),
-      borderColor: const Color(0x28FFFFFF),
-      child: Row(
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 13),
+      borderRadius: BorderRadius.circular(20),
+      blur: 20,
+      color: OxygenForgeTheme.glassSoft,
+      borderColor: OxygenForgeTheme.glassEdgeSoft,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              color: const Color(0x18FFFFFF),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0x28FFFFFF)),
-            ),
-            child: const Icon(Icons.insights_rounded, size: 18, color: Colors.white),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('OTURUM ÖZETİ', style: TextStyle(color: OxygenForgeTheme.muted, fontSize: 9.5, fontWeight: FontWeight.w800, letterSpacing: 1.1)),
-                const SizedBox(height: 3),
-                Text('${session.messages.length} mesaj  ·  ${assistantMessages.length} AI yanıtı', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
-              ],
-            ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
+          Row(
             children: [
-              const Text('TOPLAM DÜŞÜNME', style: TextStyle(color: OxygenForgeTheme.muted, fontSize: 8.5, fontWeight: FontWeight.w800, letterSpacing: .8)),
-              const SizedBox(height: 3),
-              Text(thinkingLabel, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800)),
+              Container(
+                width: 31,
+                height: 31,
+                decoration: BoxDecoration(color: const Color(0x1AFFFFFF), borderRadius: BorderRadius.circular(10), border: Border.all(color: OxygenForgeTheme.glassEdgeSoft)),
+                child: const Icon(Icons.insights_rounded, size: 17, color: Colors.white),
+              ),
+              const SizedBox(width: 9),
+              const Expanded(child: Text('ÇALIŞMA BAĞLAMI', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 1.15))),
+              Text('${session.insights.length} içgörü', style: const TextStyle(color: OxygenForgeTheme.muted, fontSize: 10.5, fontWeight: FontWeight.w600)),
+            ],
+          ),
+          const SizedBox(height: 11),
+          Wrap(
+            spacing: 7,
+            runSpacing: 7,
+            children: [
+              _SummaryMetric(icon: Icons.forum_outlined, label: '${session.messages.length} mesaj'),
+              _SummaryMetric(icon: Icons.auto_awesome_rounded, label: '${assistantMessages.length} yanıt'),
+              _SummaryMetric(icon: Icons.psychology_alt_outlined, label: thinkingLabel),
+              _SummaryMetric(icon: Icons.check_circle_outline_rounded, label: '${session.tasks.where((task) => task.isCompleted).length}/${session.tasks.length} görev'),
             ],
           ),
         ],
@@ -1349,21 +1368,52 @@ class _SessionSummary extends StatelessWidget {
   }
 }
 
+class _SummaryMetric extends StatelessWidget {
+  const _SummaryMetric({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      decoration: BoxDecoration(color: const Color(0x16FFFFFF), borderRadius: BorderRadius.circular(999), border: Border.all(color: const Color(0x22FFFFFF))),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: OxygenForgeTheme.muted),
+          const SizedBox(width: 5),
+          Text(label, style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700)),
+        ],
+      ),
+    );
+  }
+}
+
 class _MinimalHeader extends StatelessWidget {
   const _MinimalHeader({
+    required this.title,
     required this.profileName,
+    required this.provider,
+    required this.model,
+    required this.connected,
     required this.onSettings,
     required this.onCommandCenter,
   });
 
+  final String title;
   final String profileName;
+  final AiProvider provider;
+  final String model;
+  final bool connected;
   final VoidCallback onSettings;
   final VoidCallback onCommandCenter;
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 82,
+      height: 84,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
         child: Row(
@@ -1381,35 +1431,36 @@ class _MinimalHeader extends StatelessWidget {
                 icon: const Icon(Icons.menu_rounded, size: 23),
               ),
             ),
-            const SizedBox(width: 12),
-            InkWell(
+            const SizedBox(width: 10),
+            Expanded(
+              child: InkWell(
               onTap: onSettings,
-              borderRadius: BorderRadius.circular(28),
+              borderRadius: BorderRadius.circular(18),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 11),
+                padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 10),
                 decoration: BoxDecoration(
-                  color: const Color(0xB00A0A0A),
-                  borderRadius: BorderRadius.circular(28),
-                  border: Border.all(color: const Color(0x36FFFFFF)),
+                  color: OxygenForgeTheme.glassSoft,
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: OxygenForgeTheme.glassEdgeSoft),
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Flexible(
-                      child: Text(
-                        profileName,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w500),
-                      ),
+                    Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white, fontSize: 14.5, fontWeight: FontWeight.w800)),
+                    const SizedBox(height: 3),
+                    Row(
+                      children: [
+                        Container(width: 6, height: 6, decoration: BoxDecoration(color: connected ? Colors.white : OxygenForgeTheme.muted, shape: BoxShape.circle)),
+                        const SizedBox(width: 6),
+                        Expanded(child: Text(connected ? '${provider.label} · $model' : '$profileName · Demo mod', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: OxygenForgeTheme.muted, fontSize: 10.5, fontWeight: FontWeight.w600))),
+                      ],
                     ),
-                    const SizedBox(width: 5),
-                    const Icon(Icons.expand_more_rounded, color: OxygenForgeTheme.muted, size: 18),
                   ],
                 ),
               ),
             ),
-            const Spacer(),
+            ),
+            const SizedBox(width: 10),
             IconButton.filledTonal(
                 onPressed: onCommandCenter,
                 tooltip: 'Komut merkezi',
@@ -1489,6 +1540,16 @@ class _WelcomeView extends StatelessWidget {
                         const Text(
                           'Fikirlerini netleştir, analiz et ve üretime taşı. Hızlı bir başlangıç seç veya kendi mesajını yaz.',
                           style: TextStyle(color: OxygenForgeTheme.muted, fontSize: 14, height: 1.55),
+                        ),
+                        const SizedBox(height: 18),
+                        const Wrap(
+                          spacing: 7,
+                          runSpacing: 7,
+                          children: [
+                            _WelcomeCapability(icon: Icons.lightbulb_outline_rounded, label: 'Fikir'),
+                            _WelcomeCapability(icon: Icons.radar_rounded, label: 'Strateji'),
+                            _WelcomeCapability(icon: Icons.auto_graph_rounded, label: 'Analiz'),
+                          ],
                         ),
                       ],
                     ),
@@ -1586,6 +1647,33 @@ class _PromptCard extends StatelessWidget {
   }
 }
 
+class _WelcomeCapability extends StatelessWidget {
+  const _WelcomeCapability({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+      decoration: BoxDecoration(
+        color: const Color(0x16FFFFFF),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: OxygenForgeTheme.glassEdgeSoft),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 13, color: OxygenForgeTheme.text),
+          const SizedBox(width: 5),
+          Text(label, style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700)),
+        ],
+      ),
+    );
+  }
+}
+
 class _PrivacyNote extends StatelessWidget {
   const _PrivacyNote();
 
@@ -1631,10 +1719,10 @@ class _QuickActions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 48,
+      height: 60,
       child: ListView(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
+        padding: const EdgeInsets.fromLTRB(16, 7, 16, 7),
         children: [
           _QuickActionChip(icon: Icons.add_rounded, label: 'Yeni çalışma', onPressed: onNewSession),
           const SizedBox(width: 8),
@@ -1711,15 +1799,39 @@ class _QuickActionChipState extends State<_QuickActionChip> with SingleTickerPro
           scale: _pressed ? 0.95 : 1,
           duration: reduceMotion ? Duration.zero : const Duration(milliseconds: 120),
           curve: Curves.easeOutCubic,
-          child: ActionChip(
-            onPressed: widget.onPressed,
-            avatar: Icon(widget.icon, size: 17, color: OxygenForgeTheme.text),
-            label: Text(widget.label),
-            labelStyle: const TextStyle(color: OxygenForgeTheme.text, fontSize: 12.5, fontWeight: FontWeight.w600),
-            backgroundColor: const Color(0x1CFFFFFF),
-            side: const BorderSide(color: Color(0x36FFFFFF)),
-            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 8),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+          child: Material(
+            color: Colors.transparent,
+            borderRadius: BorderRadius.circular(17),
+            child: InkWell(
+              onTap: () {
+                HapticFeedback.selectionClick();
+                widget.onPressed();
+              },
+              borderRadius: BorderRadius.circular(17),
+              child: AnimatedContainer(
+                duration: reduceMotion ? Duration.zero : const Duration(milliseconds: 180),
+                curve: Curves.easeOutCubic,
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                decoration: BoxDecoration(
+                  color: _pressed ? const Color(0x2BFFFFFF) : const Color(0x17FFFFFF),
+                  borderRadius: BorderRadius.circular(17),
+                  border: Border.all(color: _pressed ? OxygenForgeTheme.glassEdge : OxygenForgeTheme.glassEdgeSoft),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 26,
+                      height: 26,
+                      decoration: BoxDecoration(color: const Color(0x1AFFFFFF), borderRadius: BorderRadius.circular(9)),
+                      child: Icon(widget.icon, size: 15, color: OxygenForgeTheme.text),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(widget.label, style: const TextStyle(color: OxygenForgeTheme.text, fontSize: 12, fontWeight: FontWeight.w700)),
+                  ],
+                ),
+              ),
+            ),
           ),
         ),
       ),
@@ -1752,30 +1864,38 @@ class _Composer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 4, 24, 20),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 820),
-        child: AnimatedContainer(
-          duration: MediaQuery.disableAnimationsOf(context) ? Duration.zero : const Duration(milliseconds: 240),
-          curve: Curves.easeOutCubic,
-          decoration: BoxDecoration(
-            color: const Color(0xB0111111),
-            borderRadius: BorderRadius.circular(22),
-            border: Border.all(color: isListening ? OxygenForgeTheme.violetBright : const Color(0x36FFFFFF)),
-            boxShadow: [
-              BoxShadow(
-                color: isListening ? OxygenForgeTheme.text.withValues(alpha: 0.16) : const Color(0x40000000),
-                blurRadius: isListening ? 34 : 24,
-                spreadRadius: isListening ? 1 : 0,
-                offset: const Offset(0, 7),
-              ),
-            ],
-          ),
-          padding: const EdgeInsets.fromLTRB(8, 7, 8, 8),
-          child: Column(
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 3, 16, 12),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 820),
+          child: FrostedPanel(
+            padding: const EdgeInsets.fromLTRB(9, 8, 9, 9),
+            borderRadius: BorderRadius.circular(25),
+            blur: 28,
+            color: isListening ? const Color(0xD0181818) : OxygenForgeTheme.glass,
+            borderColor: isListening ? Colors.white : OxygenForgeTheme.glassEdge,
+            child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(7, 0, 7, 5),
+                child: Row(
+                  children: [
+                    AnimatedContainer(
+                      duration: MediaQuery.disableAnimationsOf(context) ? Duration.zero : const Duration(milliseconds: 180),
+                      width: 7,
+                      height: 7,
+                      decoration: BoxDecoration(color: isListening || isTyping ? Colors.white : OxygenForgeTheme.muted, shape: BoxShape.circle, boxShadow: isListening ? const [BoxShadow(color: Colors.white, blurRadius: 10)] : null),
+                    ),
+                    const SizedBox(width: 7),
+                    Text(isListening ? 'Dinliyorum… konuşabilirsin' : isTyping ? 'OxygenForge yanıtı hazırlıyor' : 'OxygenForge hazır', style: const TextStyle(color: OxygenForgeTheme.muted, fontSize: 10.5, fontWeight: FontWeight.w700)),
+                    const Spacer(),
+                    const Text('⌘ Enter', style: TextStyle(color: OxygenForgeTheme.muted, fontSize: 9.5, fontWeight: FontWeight.w700)),
+                  ],
+                ),
+              ),
               if (attachmentName != null)
                 Align(
                   alignment: Alignment.centerLeft,
@@ -1797,11 +1917,13 @@ class _Composer extends StatelessWidget {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  IconButton(
+                  IconButton.filledTonal(
                     onPressed: isTyping ? null : onGallery,
                     tooltip: 'Görsel ekle',
-                    icon: const Icon(Icons.add_rounded, size: 26, color: OxygenForgeTheme.text),
+                    style: IconButton.styleFrom(backgroundColor: const Color(0x1BFFFFFF), foregroundColor: Colors.white, padding: const EdgeInsets.all(11)),
+                    icon: const Icon(Icons.add_rounded, size: 21),
                   ),
+                  const SizedBox(width: 4),
                   Expanded(
                     child: TextField(
                       controller: controller,
@@ -1821,16 +1943,17 @@ class _Composer extends StatelessWidget {
                       ),
                     ),
                   ),
-                  IconButton(
+                  IconButton.filledTonal(
                     onPressed: isTyping ? null : onVoice,
                     tooltip: isListening ? 'Dinlemeyi durdur' : 'Sesli giriş',
+                    style: IconButton.styleFrom(backgroundColor: isListening ? Colors.white : const Color(0x1BFFFFFF), foregroundColor: isListening ? Colors.black : Colors.white, padding: const EdgeInsets.all(11)),
                     icon: AnimatedSwitcher(
                       duration: MediaQuery.disableAnimationsOf(context) ? Duration.zero : const Duration(milliseconds: 180),
                       transitionBuilder: (child, animation) => ScaleTransition(scale: animation, child: FadeTransition(opacity: animation, child: child)),
                       child: Icon(
                         isListening ? Icons.mic_rounded : Icons.mic_none_rounded,
                         key: ValueKey(isListening),
-                        color: isListening ? OxygenForgeTheme.violetBright : OxygenForgeTheme.muted,
+                        color: isListening ? Colors.black : OxygenForgeTheme.text,
                       ),
                     ),
                   ),
@@ -1842,7 +1965,7 @@ class _Composer extends StatelessWidget {
                       onPressed: isTyping ? null : onSend,
                       tooltip: 'Gönder',
                       style: IconButton.styleFrom(
-                        backgroundColor: OxygenForgeTheme.violet,
+                        backgroundColor: Colors.white,
                         foregroundColor: Colors.black,
                         disabledBackgroundColor: OxygenForgeTheme.line,
                         disabledForegroundColor: OxygenForgeTheme.muted,
@@ -1862,6 +1985,7 @@ class _Composer extends StatelessWidget {
                 ],
               ),
             ],
+          ),
           ),
         ),
       ),

@@ -47,3 +47,9 @@
 - [x] Misyon kontrolü aksiyonlarını sohbet geçmişiyle çalışan akıllı prompt akışına bağla
 - [x] AI çalışma işletim sistemi için model, depolama ve widget regresyon testleri ekle
 - [x] AI çalışma işletim sistemi güncellemesi için release APK derle ve doğrula
+- [x] Mobil başlık, sohbet özet alanı ve mesaj hiyerarşisini yeniden tasarla
+- [x] Hızlı aksiyonlar ile oluşturucu alanını daha ergonomik, premium mobil yüzeylere dönüştür
+- [x] Çalışma alanı, panel ve boş durum görünümünde tutarlı cam katmanları uygula
+- [x] Rafine hareketler, dokunmatik geri bildirim ve hareket azaltma desteğini geliştir
+- [x] Yeni arayüz için widget ve tema regresyon testleri ekle
+- [x] Rafine mobil arayüz güncellemesi için release APK derle ve doğrula

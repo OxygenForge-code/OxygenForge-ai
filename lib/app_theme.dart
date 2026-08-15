@@ -7,6 +7,11 @@ class OxygenForgeTheme {
   static const panel = Color(0xFF080808);
   static const panelRaised = Color(0xFF111111);
   static const line = Color(0xFF3A3A3A);
+  static const glass = Color(0xC90B0B0B);
+  static const glassSoft = Color(0x9C121212);
+  static const glassEdge = Color(0x42FFFFFF);
+  static const glassEdgeSoft = Color(0x24FFFFFF);
+  static const softShadow = Color(0x7A000000);
   static const muted = Color(0xFFB8B8B8);
   static const text = Colors.white;
   static const violet = Colors.white;
@@ -72,6 +77,11 @@ class OxygenForgeTheme {
         backgroundColor: panel,
         indicatorColor: violet.withValues(alpha: 0.15),
       ),
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: panel,
+        modalBackgroundColor: panel,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
+      ),
     );
   }
 }
@@ -111,14 +121,18 @@ class FrostedPanel extends StatelessWidget {
         child: Container(
           padding: padding,
           decoration: BoxDecoration(
-            color: color ?? const Color(0xB30A0A0A),
+            color: color ?? OxygenForgeTheme.glass,
             gradient: const LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [Color(0x18FFFFFF), Color(0x05000000)],
+              colors: [Color(0x1FFFFFFF), Color(0x08000000), Color(0x14000000)],
+              stops: [0, 0.46, 1],
             ),
             borderRadius: borderRadius,
-            border: Border.all(color: borderColor ?? const Color(0x2EFFFFFF)),
+            border: Border.all(color: borderColor ?? OxygenForgeTheme.glassEdgeSoft),
+            boxShadow: const [
+              BoxShadow(color: OxygenForgeTheme.softShadow, blurRadius: 26, offset: Offset(0, 13)),
+            ],
           ),
           child: child,
         ),

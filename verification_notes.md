@@ -98,3 +98,9 @@ Her çalışma artık kalıcı notlara ve görev listesine sahiptir. Çalışma 
 Son AI yanıtı artık kaynak mesajına bağlı kalıcı bir içgörü olarak içgörü kasasına kaydedilebilir; kayıtlar çalışma panosunda görüntülenip silinebilir. Misyon kontrolü geçerli sohbet geçmişiyle çalışan dört odaklı üretim akışı sağlar: yönetici özeti, karar kaydı, risk taraması ve ölçülebilir eylem planı. Her misyon eylemi görünür bir kullanıcı istemi olarak sohbete eklenir; böylece kullanıcı modelden istenen çıktıyı ve kaynak bağlamını denetleyebilir.
 
 `flutter analyze` temiz geçti ve toplam 17 test başarıyla tamamlandı. Final Android APK `versionName 1.4.8`, `versionCode 14` olarak üretildi. Paket içinde `INTERNET`, `RECORD_AUDIO` ve `CAMERA` izinleri doğrulandı; APK v2 imzası geçerli. SHA-256: `472889f5da20cd7a0479cc368499605ec9297fbdc942c2fd111a1d5abd4f29af`.
+
+## Rafine mobil arayüz QA (1.4.9)
+
+Mobil sohbet deneyimi yeni cam yüzey tokenlarıyla yeniden dengelendi. Başlık artık çalışma adı ile seçili sağlayıcı/modeli birlikte gösterir; oturum özeti mesaj, AI yanıtı, toplam düşünme süresi ve açık görev bilgisini kompakt metrik pill’leriyle sunar. Hızlı aksiyonlar mikro kartlara dönüştürüldü ve dokunuşta platform dokunsal geri bildirimi eklendi. Oluşturucu alanı durum göstergeli, katmanlı bir buzlu cam panel olarak yenilendi; mesaj kartları üst kimlik etiketi, saat damgası, daha derin cam kenarı ve iyileştirilmiş giriş hiyerarşisi kazandı.
+
+Boş çalışma alanına üstten süzülen monokrom ışık katmanı, fikir/strateji/analiz yetenek etiketleri ve daha tutarlı cam derinliği eklendi. Yeni yüzeyler mevcut hareket azaltma davranışını korur. `flutter analyze` temiz geçti ve toplam 17 test başarıyla tamamlandı. Final Android APK `versionName 1.4.9`, `versionCode 15` olarak üretildi; paket kimliği `com.oxygenforge.oxygenforge_ai` doğrulandı ve APK Signature Scheme v2 imzası geçerli bulundu. Teslim APK SHA-256: `3c691094c0d907796f1cf99a19110c82dec83abe70688939e47d6725fd1d6452`.
