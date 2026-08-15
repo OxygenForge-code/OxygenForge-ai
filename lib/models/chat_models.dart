@@ -228,6 +228,40 @@ class WorkspaceTask {
   }
 }
 
+class WorkspaceInsight {
+  WorkspaceInsight({
+    required this.id,
+    required this.title,
+    required this.content,
+    required this.createdAt,
+    this.sourceMessageId,
+  });
+
+  final String id;
+  String title;
+  String content;
+  final DateTime createdAt;
+  final String? sourceMessageId;
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'title': title,
+        'content': content,
+        'createdAt': createdAt.toIso8601String(),
+        'sourceMessageId': sourceMessageId,
+      };
+
+  factory WorkspaceInsight.fromJson(Map<String, dynamic> json) {
+    return WorkspaceInsight(
+      id: json['id'] as String? ?? DateTime.now().microsecondsSinceEpoch.toString(),
+      title: json['title'] as String? ?? 'Kaydedilen içgörü',
+      content: json['content'] as String? ?? '',
+      createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ?? DateTime.now(),
+      sourceMessageId: json['sourceMessageId'] as String?,
+    );
+  }
+}
+
 class ChatSession {
   ChatSession({
     required this.id,
@@ -238,8 +272,10 @@ class ChatSession {
     this.notes = '',
     List<ChatMessage>? messages,
     List<WorkspaceTask>? tasks,
+    List<WorkspaceInsight>? insights,
   })  : messages = messages ?? <ChatMessage>[],
-        tasks = tasks ?? <WorkspaceTask>[];
+        tasks = tasks ?? <WorkspaceTask>[],
+        insights = insights ?? <WorkspaceInsight>[];
 
   final String id;
   String title;
@@ -249,6 +285,7 @@ class ChatSession {
   String notes;
   final List<ChatMessage> messages;
   final List<WorkspaceTask> tasks;
+  final List<WorkspaceInsight> insights;
 
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -259,11 +296,13 @@ class ChatSession {
         'notes': notes,
         'messages': messages.map((message) => message.toJson()).toList(),
         'tasks': tasks.map((task) => task.toJson()).toList(),
+        'insights': insights.map((insight) => insight.toJson()).toList(),
       };
 
   factory ChatSession.fromJson(Map<String, dynamic> json) {
     final rawMessages = json['messages'];
     final rawTasks = json['tasks'];
+    final rawInsights = json['insights'];
     return ChatSession(
       id: json['id'] as String? ?? DateTime.now().microsecondsSinceEpoch.toString(),
       title: json['title'] as String? ?? 'Yeni çalışma',
@@ -283,6 +322,12 @@ class ChatSession {
               .map((task) => WorkspaceTask.fromJson(Map<String, dynamic>.from(task)))
               .toList()
           : <WorkspaceTask>[],
+      insights: rawInsights is List
+          ? rawInsights
+              .whereType<Map>()
+              .map((insight) => WorkspaceInsight.fromJson(Map<String, dynamic>.from(insight)))
+              .toList()
+          : <WorkspaceInsight>[],
     );
   }
 }

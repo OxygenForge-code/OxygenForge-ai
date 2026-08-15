@@ -30,6 +30,15 @@ void main() {
           sourceMessageId: '$id-message',
         ),
       ],
+      insights: <WorkspaceInsight>[
+        WorkspaceInsight(
+          id: '$id-insight',
+          title: 'İlk hedef müşteri segmentini doğrula',
+          content: 'Önce hedef müşteri segmentini görüşmelerle doğrulamak maliyeti azaltır.',
+          createdAt: now,
+          sourceMessageId: '$id-message',
+        ),
+      ],
     );
   }
 
@@ -44,6 +53,8 @@ void main() {
     expect(restored.notes, 'Teklif dosyasını cuma günü gözden geçir.');
     expect(restored.tasks.single.title, 'Rakipleri karşılaştır');
     expect(restored.tasks.single.sourceMessageId, 'pinned-message');
+    expect(restored.insights.single.title, 'İlk hedef müşteri segmentini doğrula');
+    expect(restored.insights.single.sourceMessageId, 'pinned-message');
   });
 
   test('eski oturum kayıtları sabitlenmemiş olarak güvenle yüklenir', () {
@@ -58,6 +69,7 @@ void main() {
     expect(restored.isPinned, isFalse);
     expect(restored.notes, isEmpty);
     expect(restored.tasks, isEmpty);
+    expect(restored.insights, isEmpty);
   });
 
   test('sabitlenmiş oturum cihazda kaydedilip yeniden yüklenir', () async {
@@ -72,5 +84,6 @@ void main() {
     expect(restored.single.messages, hasLength(1));
     expect(restored.single.notes, 'Teklif dosyasını cuma günü gözden geçir.');
     expect(restored.single.tasks.single.title, 'Rakipleri karşılaştır');
+    expect(restored.single.insights.single.content, 'Önce hedef müşteri segmentini görüşmelerle doğrulamak maliyeti azaltır.');
   });
 }

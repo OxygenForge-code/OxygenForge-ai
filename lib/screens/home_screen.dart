@@ -330,6 +330,47 @@ class _HomeScreenState extends State<HomeScreen> {
                       ],
                     ),
                     const SizedBox(height: 18),
+                    Row(
+                      children: [
+                        const Text('İÇGÖRÜ KASASI', style: TextStyle(color: OxygenForgeTheme.muted, fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 1.2)),
+                        const Spacer(),
+                        Text('${session.insights.length} kayıt', style: const TextStyle(color: OxygenForgeTheme.muted, fontSize: 11)),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    if (session.insights.isEmpty)
+                      const Padding(
+                        padding: EdgeInsets.only(bottom: 12),
+                        child: Text('Son AI yanıtını komut merkezinden içgörü olarak kaydedebilirsin.', style: TextStyle(color: OxygenForgeTheme.muted, fontSize: 12, height: 1.4)),
+                      )
+                    else
+                      ...session.insights.reversed.map(
+                        (insight) => Container(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          padding: const EdgeInsets.fromLTRB(12, 10, 6, 10),
+                          decoration: BoxDecoration(color: const Color(0x16000000), borderRadius: BorderRadius.circular(14), border: Border.all(color: const Color(0x24FFFFFF))),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Padding(padding: EdgeInsets.only(top: 2), child: Icon(Icons.bookmark_rounded, size: 16, color: Colors.white)),
+                              const SizedBox(width: 9),
+                              Expanded(child: Text(insight.title, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, height: 1.3))),
+                              IconButton(
+                                onPressed: () {
+                                  setState(() {
+                                    session.insights.remove(insight);
+                                    session.updatedAt = DateTime.now();
+                                  });
+                                  _store.saveSessions(_sessions);
+                                  setSheetState(() {});
+                                },
+                                icon: const Icon(Icons.close_rounded, size: 17),
+                                tooltip: 'İçgörüyü sil',
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     SizedBox(
                       width: double.infinity,
                       child: FilledButton.icon(
@@ -410,6 +451,93 @@ class _HomeScreenState extends State<HomeScreen> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${extracted.length} görev çalışma panosuna eklendi.')));
   }
 
+  Future<void> _saveLastAnswerAsInsight() async {
+    final session = _selectedSession;
+    if (session == null) return;
+    final index = session.messages.lastIndexWhere((message) => message.role == MessageRole.assistant);
+    if (index < 0) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Kaydetmek için önce bir AI yanıtı al.')));
+      return;
+    }
+    final source = session.messages[index];
+    if (session.insights.any((insight) => insight.sourceMessageId == source.id)) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Son yanıt zaten içgörü kasasına kaydedildi.')));
+      return;
+    }
+    final plain = source.text.replaceAll(RegExp(r'[#*_`>]+'), '').replaceAll(RegExp(r'\s+'), ' ').trim();
+    final title = plain.length > 64 ? '${plain.substring(0, 64)}…' : plain;
+    setState(() {
+      session.insights.add(WorkspaceInsight(
+        id: DateTime.now().microsecondsSinceEpoch.toString(),
+        title: title.isEmpty ? 'Kaydedilen AI içgörüsü' : title,
+        content: source.text,
+        createdAt: DateTime.now(),
+        sourceMessageId: source.id,
+      ));
+      session.updatedAt = DateTime.now();
+    });
+    await _store.saveSessions(_sessions);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Son yanıt içgörü kasasına kaydedildi.')));
+  }
+
+  void _runMissionAction(String instruction) {
+    final session = _selectedSession;
+    if (session == null || session.messages.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Misyon kontrolü için önce bu çalışmada en az bir mesaj gönder.')));
+      return;
+    }
+    _composerController.text = instruction;
+    _composerController.selection = TextSelection.collapsed(offset: instruction.length);
+    Navigator.of(context).maybePop();
+    _sendMessage();
+  }
+
+  Future<void> _openMissionControl() async {
+    final actions = <({String title, String subtitle, IconData icon, String instruction})>[
+      (title: 'Yönetici özeti', subtitle: 'Bağlamı, sonucu ve açık noktaları kısalt', icon: Icons.summarize_rounded, instruction: 'Bu çalışma oturumunun yönetici özetini hazırla. Bağlamı, en önemli bulguları, kararları, açık noktaları ve önerilen sonraki adımı net başlıklarla yaz.'),
+      (title: 'Karar kaydı', subtitle: 'Alternatifler ve gerekçelerle kararları kaydet', icon: Icons.account_tree_rounded, instruction: 'Bu çalışma oturumundaki kararları bir karar kaydı olarak çıkar. Her karar için seçenekleri, seçilen yönü, gerekçeyi ve varsayımları yaz. Eksik kararları ayrıca belirt.'),
+      (title: 'Risk taraması', subtitle: 'Riskleri, etkileri ve azaltma planını incele', icon: Icons.shield_outlined, instruction: 'Bu çalışma oturumu için kapsamlı bir risk taraması yap. Her risk için olasılık, etki, erken uyarı işareti ve somut azaltma adımı ver.'),
+      (title: 'Eylem planı', subtitle: 'Öncelikli, ölçülebilir uygulama planı üret', icon: Icons.rocket_launch_outlined, instruction: 'Bu çalışma oturumundaki bağlamı kullanarak önceliklendirilmiş bir eylem planı hazırla. Görevleri sıralı ve kontrol listesi biçiminde; her görev için beklenen çıktı ve başarı ölçütüyle yaz.'),
+    ];
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: OxygenForgeTheme.panel,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(18, 12, 18, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(child: Container(width: 42, height: 4, decoration: BoxDecoration(color: OxygenForgeTheme.line, borderRadius: BorderRadius.circular(99)))),
+              const SizedBox(height: 18),
+              const Text('MİSYON KONTROL', style: TextStyle(color: OxygenForgeTheme.muted, fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 1.4)),
+              const SizedBox(height: 5),
+              const Text('AI çalışma aksiyonları', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
+              const SizedBox(height: 6),
+              const Text('Geçerli sohbet bağlamını kullanarak odaklanmış bir çalışma çıktısı üret.', style: TextStyle(color: OxygenForgeTheme.muted, fontSize: 12.5, height: 1.4)),
+              const SizedBox(height: 14),
+              ...actions.map((action) => ListTile(
+                    leading: Container(
+                      width: 38,
+                      height: 38,
+                      decoration: BoxDecoration(color: const Color(0x18FFFFFF), borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0x28FFFFFF))),
+                      child: Icon(action.icon, size: 20),
+                    ),
+                    title: Text(action.title, style: const TextStyle(fontWeight: FontWeight.w800)),
+                    subtitle: Text(action.subtitle),
+                    trailing: const Icon(Icons.arrow_forward_rounded, size: 18),
+                    onTap: () => _runMissionAction(action.instruction),
+                  )),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Future<void> _openCommandCenter() async {
     final searchController = TextEditingController();
     var query = '';
@@ -417,6 +545,8 @@ class _HomeScreenState extends State<HomeScreen> {
       (label: 'Yeni çalışma', subtitle: 'Boş bir AI çalışma alanı aç', icon: Icons.add_rounded, action: _newSession),
       (label: 'Çalışma panosu', subtitle: 'Notları ve görevleri yönet', icon: Icons.dashboard_customize_rounded, action: _openWorkspaceBoard),
       (label: 'Son yanıttan görev çıkar', subtitle: 'Madde adımlarını kontrol listesine ekle', icon: Icons.auto_fix_high_rounded, action: _extractTasksFromLastAnswer),
+      (label: 'Son yanıtı içgörü olarak kaydet', subtitle: 'AI yanıtını kalıcı içgörü kasasına ekle', icon: Icons.bookmark_add_outlined, action: _saveLastAnswerAsInsight),
+      (label: 'Misyon kontrol', subtitle: 'Özet, karar, risk ve eylem planı üret', icon: Icons.radar_rounded, action: _openMissionControl),
       (label: 'Sohbeti dışa aktar', subtitle: 'Geçerli oturumu Markdown olarak kopyala', icon: Icons.ios_share_rounded, action: _exportCurrentSession),
       (label: 'API profilleri', subtitle: 'Sağlayıcı ve model bağlantılarını yönet', icon: Icons.tune_rounded, action: _openSettings),
     ];
@@ -972,6 +1102,7 @@ class _HomeScreenState extends State<HomeScreen> {
               onExport: _exportCurrentSession,
               onBoard: _openWorkspaceBoard,
               onExtractTasks: _extractTasksFromLastAnswer,
+              onMissionControl: _openMissionControl,
               onProviders: _openSettings,
               onCamera: () => _pickImage(ImageSource.camera),
               onGallery: () => _pickImage(ImageSource.gallery),
@@ -1482,6 +1613,7 @@ class _QuickActions extends StatelessWidget {
     required this.onExport,
     required this.onBoard,
     required this.onExtractTasks,
+    required this.onMissionControl,
     required this.onProviders,
     required this.onCamera,
     required this.onGallery,
@@ -1491,6 +1623,7 @@ class _QuickActions extends StatelessWidget {
   final VoidCallback onExport;
   final VoidCallback onBoard;
   final VoidCallback onExtractTasks;
+  final VoidCallback onMissionControl;
   final VoidCallback onProviders;
   final VoidCallback onCamera;
   final VoidCallback onGallery;
@@ -1510,6 +1643,8 @@ class _QuickActions extends StatelessWidget {
           _QuickActionChip(icon: Icons.dashboard_customize_rounded, label: 'Çalışma panosu', onPressed: onBoard),
           const SizedBox(width: 8),
           _QuickActionChip(icon: Icons.auto_fix_high_rounded, label: 'Görev çıkar', onPressed: onExtractTasks),
+          const SizedBox(width: 8),
+          _QuickActionChip(icon: Icons.radar_rounded, label: 'Misyon kontrol', onPressed: onMissionControl),
           const SizedBox(width: 8),
           _QuickActionChip(icon: Icons.hub_rounded, label: 'Bağlantılar', onPressed: onProviders),
           const SizedBox(width: 8),

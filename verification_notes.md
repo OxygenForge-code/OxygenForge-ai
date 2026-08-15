@@ -92,3 +92,9 @@ Sıfırlanma sonrası Flutter, Android SDK ve Java geliştirme araç zinciri yen
 Her çalışma artık kalıcı notlara ve görev listesine sahiptir. Çalışma panosu not düzenleme, görev ekleme, görevi tamamlama ve silme akışlarını içerir. Son AI yanıtı numaralı ya da madde işaretli adımlar içeriyorsa, `Görev çıkar` komutu en fazla sekiz benzersiz adımı kaynak mesaja bağlı görevler olarak ekler. Komut merkezi; yeni çalışma, çalışma panosu, görev çıkarma, dışa aktarma ve API profil yönetimi işlemlerini arama alanıyla bir araya getirir.
 
 `flutter analyze` temiz geçti ve toplam 17 test başarıyla tamamlandı. Final Android APK `versionName 1.4.7`, `versionCode 13` olarak üretildi. Paket içinde `INTERNET`, `RECORD_AUDIO` ve `CAMERA` izinleri doğrulandı; APK v2 imzası geçerli. SHA-256: `cda4da3318b9e6f520ad3732e8d94451d8fcbedc6619aa6bb482ba894caaaa51`.
+
+## AI çalışma işletim sistemi QA (1.4.8)
+
+Son AI yanıtı artık kaynak mesajına bağlı kalıcı bir içgörü olarak içgörü kasasına kaydedilebilir; kayıtlar çalışma panosunda görüntülenip silinebilir. Misyon kontrolü geçerli sohbet geçmişiyle çalışan dört odaklı üretim akışı sağlar: yönetici özeti, karar kaydı, risk taraması ve ölçülebilir eylem planı. Her misyon eylemi görünür bir kullanıcı istemi olarak sohbete eklenir; böylece kullanıcı modelden istenen çıktıyı ve kaynak bağlamını denetleyebilir.
+
+`flutter analyze` temiz geçti ve toplam 17 test başarıyla tamamlandı. Final Android APK `versionName 1.4.8`, `versionCode 14` olarak üretildi. Paket içinde `INTERNET`, `RECORD_AUDIO` ve `CAMERA` izinleri doğrulandı; APK v2 imzası geçerli. SHA-256: `472889f5da20cd7a0479cc368499605ec9297fbdc942c2fd111a1d5abd4f29af`.

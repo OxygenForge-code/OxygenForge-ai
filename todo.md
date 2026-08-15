@@ -41,3 +41,9 @@
 - [x] Yeni çalışma ve sohbet işlemlerini açan komut merkezi ekle
 - [x] İleri çalışma alanı araçları için model, depolama ve widget regresyon testleri ekle
 - [x] İleri çalışma alanı güncellemesi için release APK derle ve doğrula
+- [x] Son AI yanıtını kaynak bağlı kalıcı içgörü olarak kaydetme ekle
+- [x] Çalışma panosuna içgörü kasası ve içgörü yönetimi ekle
+- [x] Özet, karar kaydı, risk taraması ve eylem planı için misyon kontrolü ekle
+- [x] Misyon kontrolü aksiyonlarını sohbet geçmişiyle çalışan akıllı prompt akışına bağla
+- [x] AI çalışma işletim sistemi için model, depolama ve widget regresyon testleri ekle
+- [x] AI çalışma işletim sistemi güncellemesi için release APK derle ve doğrula
