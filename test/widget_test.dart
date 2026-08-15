@@ -1,22 +1,20 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:oxygenforge_ai/app_theme.dart';
 import 'package:oxygenforge_ai/main.dart';
 
 void main() {
-  testWidgets('OxygenForge AI welcome workspace renders', (WidgetTester tester) async {
+  testWidgets('OxygenForge AI welcome workspace renders', (
+    WidgetTester tester,
+  ) async {
     SharedPreferences.setMockInitialValues({});
     await tester.pumpWidget(const OxygenForgeApp());
     await tester.pumpAndSettle();
 
-    expect(find.text('Bugün ne\nüreteceğiz?'), findsOneWidget);
-    expect(find.text('OXYGENFORGE / ÇALIŞMA ALANI'), findsOneWidget);
+    expect(find.text('Nasıl yardımcı olabilirim?'), findsOneWidget);
     expect(find.text('Yeni çalışma'), findsAtLeastNWidgets(1));
-    expect(find.text('Dışa aktar'), findsOneWidget);
-    expect(find.text('Çalışma panosu'), findsOneWidget);
-    expect(find.text('Görev çıkar'), findsOneWidget);
-    expect(find.byType(FrostedPanel), findsWidgets);
-    expect(find.text('Ask OxygenForge AI…'), findsOneWidget);
+    expect(find.text('Kod veya analiz'), findsOneWidget);
+    expect(find.text('Plan oluştur'), findsOneWidget);
+    expect(find.text('Mesaj yaz…'), findsOneWidget);
   });
 }

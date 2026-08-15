@@ -53,3 +53,7 @@
 - [x] Rafine hareketler, dokunmatik geri bildirim ve hareket azaltma desteğini geliştir
 - [x] Yeni arayüz için widget ve tema regresyon testleri ekle
 - [x] Rafine mobil arayüz güncellemesi için release APK derle ve doğrula
+- [x] Mesaj metni animasyonunun uygulama yeniden açıldığında veya listeye yeniden girdiğinde tekrar başlamasını engelle
+- [x] Tekrar etmeyen mesaj görünümü için widget regresyon testleri ekle
+- [x] Mobil başlık, özet, hızlı aksiyonlar ve boş durum görünümünü daha sade bilgi hiyerarşisine dönüştür
+- [x] Sadeleştirilmiş mobil deneyim için release APK derle, doğrula ve teslim et

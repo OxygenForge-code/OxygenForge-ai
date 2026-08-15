@@ -25,7 +25,9 @@ void main() {
     expect(restored.thinkingDuration, const Duration(milliseconds: 850));
   });
 
-  testWidgets('Asistan mesajı düşünme metnini varsayılan olarak gösterir ve kapatabilir', (tester) async {
+  testWidgets('Asistan mesajı düşünme metnini isteğe bağlı gösterir', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       MaterialApp(
         theme: OxygenForgeTheme.build(),
@@ -47,14 +49,37 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Modelin düşünme süreci'), findsOneWidget);
+    expect(find.text('Düşünme süreci'), findsOneWidget);
     expect(find.text('1.4 sn düşündü'), findsOneWidget);
-    expect(find.byType(FrostedPanel), findsWidgets);
-    expect(find.textContaining('Bağlamı inceledim.'), findsOneWidget);
+    expect(find.textContaining('Bağlamı inceledim.'), findsNothing);
 
-    await tester.tap(find.text('Modelin düşünme süreci'));
+    await tester.tap(find.text('Düşünme süreci'));
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('Bağlamı inceledim.'), findsNothing);
+    expect(find.textContaining('Bağlamı inceledim.'), findsOneWidget);
   });
+
+  testWidgets(
+    'Asistan metni ilk kurulumda ve yeniden kurulumda anında görünür',
+    (tester) async {
+      final message = ChatMessage(
+        id: 'assistant-static',
+        role: MessageRole.assistant,
+        text: 'Yanıt anında görünür.',
+        createdAt: DateTime(2026, 8, 15),
+      );
+
+      Widget buildMessage() => MaterialApp(
+        theme: OxygenForgeTheme.build(),
+        home: Scaffold(body: MessageBubble(message: message)),
+      );
+
+      await tester.pumpWidget(buildMessage());
+      expect(find.text('Yanıt anında görünür.'), findsOneWidget);
+
+      await tester.pumpWidget(buildMessage());
+      await tester.pump();
+      expect(find.text('Yanıt anında görünür.'), findsOneWidget);
+    },
+  );
 }
