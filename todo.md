@@ -26,3 +26,7 @@
 - [x] Düşünme süresi, aşamalı giriş ve buzlu cam arayüz için regresyon testleri ekle
 - [x] Buzlu cam sohbet güncellemesi için release APK derle ve doğrula
 - [x] Kart sonrası metin açılış gecikmesini içeren release APK derle ve doğrula
+- [x] Sohbet çalışma alanının görsel hiyerarşisini ana ekranla uyumlu hale getir
+- [x] Mobil başlık, durum kartı ve oluşturucu alanını modernleştir
+- [x] Ana ekran uyumlu arayüz için widget ve tema regresyon testleri ekle
+- [x] Modern ana ekran uyumlu arayüz için release APK derle ve doğrula

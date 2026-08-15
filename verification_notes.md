@@ -74,3 +74,9 @@ Mesajlar girişte kayma/sönme hareketiyle görünür. Düşünme paneli, başl�
 Asistan yanıtı beklenirken geçen süre ölçülür ve `Düşündü` rozeti olarak mesaj kartının üstünde gösterilir. Bu süre sohbet geçmişinin JSON kaydında saklanır. Asistan yanıtı kartı girdikten sonra metin kısa bir gecikmeyle aşamalı biçimde görünür; önceki mesajlar kimlikleri üzerinden korunarak tekrar oynatılmaz.
 
 Sohbet mesajları ve ayar kartları siyah-beyaz buzlu cam panel yapısına geçirildi. Mesaj alanında ambient beyaz ışık lekeleri, yarı saydam koyu yüzeyler, beyaz cam kenarlar ve arka plan bulanıklığı kullanılır. Kartın görünmesinden sonra metin açılışı 150 ms gecikmeyle başlar. `flutter analyze` temiz geçti ve toplam 14 test başarıyla tamamlandı. Final Android APK `versionName 1.4.4`, `versionCode 10` olarak üretildi. Paket içinde `INTERNET`, `RECORD_AUDIO` ve `CAMERA` izinleri doğrulandı; APK v2 imzası geçerli. SHA-256: `d8ac2293ce0795f50b76c617c94f240925abeaef473cf06da6ceaac48f902314`.
+
+## Modern ana ekran uyumu QA (1.4.5)
+
+Boş sohbet alanı artık mobil cihazlarda da ana ekranın çalışma alanı yaklaşımını sürdüren bir hero kartı, hızlı başlangıç önerileri ve gizlilik notu gösterir. Kompakt başlık, profil seçici ve bağlantı denetimleri yarı saydam siyah-beyaz yüzeylere uyarlandı. Geniş ekranda sohbet başlığı, yuvarlatılmış buzlu cam denetim çubuğu olarak sunulur; hızlı aksiyonlar Türkçeleştirildi ve öneri kartları ekran genişliğine göre tek veya iki sütuna yerleşir.
+
+Sıfırlanma sonrası Flutter, Android SDK ve Java geliştirme araç zinciri yeniden kuruldu. `flutter analyze` temiz geçti ve toplam 14 test başarıyla tamamlandı. Final Android APK `versionName 1.4.5`, `versionCode 11` olarak üretildi. Paket içinde `INTERNET`, `RECORD_AUDIO` ve `CAMERA` izinleri doğrulandı; APK v2 imzası geçerli. SHA-256: `993ea7ae10247576e89ade9e106b802acfbdb5840d26322a4a2d6371b2c3f1b5`.

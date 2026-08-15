@@ -594,7 +594,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildConversation(ChatSession? session, {required bool compact}) {
     final messages = session?.messages ?? <ChatMessage>[];
     if (messages.isEmpty) {
-      return compact ? const SizedBox.expand() : _WelcomeView(onPromptTap: _usePrompt);
+      return _WelcomeView(compact: compact, onPromptTap: _usePrompt);
     }
 
     return ListView.builder(
@@ -651,14 +651,17 @@ class _WorkspaceHeader extends StatelessWidget {
     if (minimal) {
       return _MinimalHeader(profileName: profileName, onSettings: onSettings);
     }
-    return Container(
-      height: 76,
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      decoration: const BoxDecoration(
-        color: OxygenForgeTheme.ink,
-        border: Border(bottom: BorderSide(color: OxygenForgeTheme.line)),
-      ),
-      child: Row(
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+      child: FrostedPanel(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        borderRadius: BorderRadius.circular(24),
+        blur: 18,
+        color: const Color(0xAD0A0A0A),
+        borderColor: const Color(0x30FFFFFF),
+        child: SizedBox(
+          height: 54,
+          child: Row(
         children: [
           if (isCompact) ...[
             Builder(
@@ -730,8 +733,10 @@ class _WorkspaceHeader extends StatelessWidget {
             tooltip: 'Ayarlar',
             icon: const Icon(Icons.tune_rounded, color: OxygenForgeTheme.muted),
           ),
-        ],
+          ],
+        ),
       ),
+    ),
     );
   }
 }
@@ -755,9 +760,9 @@ class _MinimalHeader extends StatelessWidget {
                 onPressed: () => Scaffold.of(context).openDrawer(),
                 tooltip: 'Menüyü aç',
                 style: IconButton.styleFrom(
-                  backgroundColor: OxygenForgeTheme.panelRaised,
+                  backgroundColor: const Color(0x1CFFFFFF),
                   foregroundColor: Colors.white,
-                  side: const BorderSide(color: OxygenForgeTheme.line),
+                  side: const BorderSide(color: Color(0x36FFFFFF)),
                   padding: const EdgeInsets.all(14),
                 ),
                 icon: const Icon(Icons.menu_rounded, size: 23),
@@ -770,9 +775,9 @@ class _MinimalHeader extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 11),
                 decoration: BoxDecoration(
-                  color: OxygenForgeTheme.panelRaised,
+                  color: const Color(0xB00A0A0A),
                   borderRadius: BorderRadius.circular(28),
-                  border: Border.all(color: OxygenForgeTheme.line),
+                  border: Border.all(color: const Color(0x36FFFFFF)),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -793,12 +798,12 @@ class _MinimalHeader extends StatelessWidget {
             ),
             const Spacer(),
             IconButton.filledTonal(
-              onPressed: onSettings,
-              tooltip: 'Bağlantılar',
-              style: IconButton.styleFrom(
-                backgroundColor: OxygenForgeTheme.panelRaised,
-                foregroundColor: Colors.white,
-                side: const BorderSide(color: OxygenForgeTheme.line),
+                onPressed: onSettings,
+                tooltip: 'Bağlantılar',
+                style: IconButton.styleFrom(
+                  backgroundColor: const Color(0x1CFFFFFF),
+                  foregroundColor: Colors.white,
+                  side: const BorderSide(color: Color(0x36FFFFFF)),
                 padding: const EdgeInsets.all(14),
               ),
               icon: const Icon(Icons.blur_circular_rounded, size: 24),
@@ -811,92 +816,104 @@ class _MinimalHeader extends StatelessWidget {
 }
 
 class _WelcomeView extends StatelessWidget {
-  const _WelcomeView({required this.onPromptTap});
+  const _WelcomeView({required this.compact, required this.onPromptTap});
 
+  final bool compact;
   final ValueChanged<String> onPromptTap;
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(24, 46, 24, 24),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 790),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 58,
-                height: 58,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(18),
-                  gradient: const ForgeGradient(),
-                  boxShadow: const [BoxShadow(color: Color(0x33FFFFFF), blurRadius: 30, offset: Offset(0, 10))],
-                ),
-                child: const Icon(Icons.bolt_rounded, color: Colors.black, size: 32),
-              ),
-              const SizedBox(height: 25),
-              ShaderMask(
-                shaderCallback: (bounds) => const ForgeGradient().createShader(bounds),
-                child: const Text(
-                  'Fikrini ateşle.',
-                  style: TextStyle(color: Colors.white, fontSize: 37, fontWeight: FontWeight.w800, letterSpacing: -1.2),
-                ),
-              ),
-              const SizedBox(height: 10),
-              const Text(
-                'OxygenForge AI, fikirlerini netleştirmek ve üretime taşımak için sessiz, odaklı bir çalışma alanı.',
-                style: TextStyle(color: OxygenForgeTheme.muted, fontSize: 15, height: 1.55),
-              ),
-              const SizedBox(height: 34),
-              const Text('Nereden başlamak istersin?', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
-              const SizedBox(height: 14),
-              Wrap(
-                spacing: 12,
-                runSpacing: 12,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final horizontalPadding = compact ? 16.0 : 24.0;
+        final cardWidth = constraints.maxWidth >= 780 ? (constraints.maxWidth - 12) / 2 : constraints.maxWidth;
+        return SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(horizontalPadding, compact ? 16 : 30, horizontalPadding, 24),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 860),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _PromptCard(
-                    icon: Icons.lightbulb_outline_rounded,
-                    title: 'Bir fikri geliştir',
-                    subtitle: 'Konseptini uygulanabilir adımlara çevir',
-                    prompt: 'Bu fikri daha net ve uygulanabilir hale getirmeme yardım et: ',
-                    onTap: onPromptTap,
+                  FrostedPanel(
+                    padding: EdgeInsets.all(compact ? 20 : 26),
+                    borderRadius: BorderRadius.circular(28),
+                    blur: 24,
+                    color: const Color(0xA60A0A0A),
+                    borderColor: const Color(0x36FFFFFF),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const ForgeLogo(compact: true),
+                            const SizedBox(width: 11),
+                            const Expanded(
+                              child: Text(
+                                'OXYGENFORGE / ÇALIŞMA ALANI',
+                                style: TextStyle(color: OxygenForgeTheme.muted, fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 1.3),
+                              ),
+                            ),
+                            Container(
+                              width: 8,
+                              height: 8,
+                              decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: compact ? 26 : 32),
+                        Text(
+                          compact ? 'Bugün ne\nüreteceğiz?' : 'Fikrini ateşle.',
+                          style: TextStyle(
+                            color: OxygenForgeTheme.text,
+                            fontSize: compact ? 34 : 42,
+                            height: 1.03,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -1.5,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        const Text(
+                          'Fikirlerini netleştir, analiz et ve üretime taşı. Hızlı bir başlangıç seç veya kendi mesajını yaz.',
+                          style: TextStyle(color: OxygenForgeTheme.muted, fontSize: 14, height: 1.55),
+                        ),
+                      ],
+                    ),
                   ),
-                  _PromptCard(
-                    icon: Icons.code_rounded,
-                    title: 'Kod yaz veya düzelt',
-                    subtitle: 'Bir problemi birlikte analiz et',
-                    prompt: 'Şu kod problemini analiz et ve çözüm öner: ',
-                    onTap: onPromptTap,
+                  const SizedBox(height: 28),
+                  const Row(
+                    children: [
+                      Text('HIZLI BAŞLANGIÇ', style: TextStyle(color: OxygenForgeTheme.muted, fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 1.3)),
+                      SizedBox(width: 10),
+                      Expanded(child: Divider(color: Color(0x26FFFFFF))),
+                    ],
                   ),
-                  _PromptCard(
-                    icon: Icons.map_outlined,
-                    title: 'Bir plan oluştur',
-                    subtitle: 'Hedefine giden yolu sadeleştir',
-                    prompt: 'Şu hedef için adım adım bir plan oluştur: ',
-                    onTap: onPromptTap,
+                  const SizedBox(height: 14),
+                  Wrap(
+                    spacing: 12,
+                    runSpacing: 12,
+                    children: [
+                      _PromptCard(width: cardWidth, icon: Icons.lightbulb_outline_rounded, title: 'Bir fikri geliştir', subtitle: 'Konseptini uygulanabilir adımlara çevir', prompt: 'Bu fikri daha net ve uygulanabilir hale getirmeme yardım et: ', onTap: onPromptTap),
+                      _PromptCard(width: cardWidth, icon: Icons.code_rounded, title: 'Kod yaz veya düzelt', subtitle: 'Bir problemi birlikte analiz et', prompt: 'Şu kod problemini analiz et ve çözüm öner: ', onTap: onPromptTap),
+                      _PromptCard(width: cardWidth, icon: Icons.map_outlined, title: 'Bir plan oluştur', subtitle: 'Hedefine giden yolu sadeleştir', prompt: 'Şu hedef için adım adım bir plan oluştur: ', onTap: onPromptTap),
+                      _PromptCard(width: cardWidth, icon: Icons.edit_note_rounded, title: 'Metni iyileştir', subtitle: 'Yazını daha güçlü ve net yap', prompt: 'Şu metni daha profesyonel ve net hale getir: ', onTap: onPromptTap),
+                    ],
                   ),
-                  _PromptCard(
-                    icon: Icons.edit_note_rounded,
-                    title: 'Metni iyileştir',
-                    subtitle: 'Yazını daha güçlü ve net yap',
-                    prompt: 'Şu metni daha profesyonel ve net hale getir: ',
-                    onTap: onPromptTap,
-                  ),
+                  const SizedBox(height: 28),
+                  const _PrivacyNote(),
                 ],
               ),
-              const SizedBox(height: 40),
-              const _PrivacyNote(),
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
 
 class _PromptCard extends StatelessWidget {
   const _PromptCard({
+    required this.width,
     required this.icon,
     required this.title,
     required this.subtitle,
@@ -904,6 +921,7 @@ class _PromptCard extends StatelessWidget {
     required this.onTap,
   });
 
+  final double width;
   final IconData icon;
   final String title;
   final String subtitle;
@@ -914,23 +932,24 @@ class _PromptCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: () => onTap(prompt),
-      borderRadius: BorderRadius.circular(18),
-      child: Container(
-        width: 370,
-        padding: const EdgeInsets.all(17),
-        decoration: BoxDecoration(
-          color: OxygenForgeTheme.panel,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: OxygenForgeTheme.line),
-        ),
+      borderRadius: BorderRadius.circular(20),
+      child: SizedBox(
+        width: width,
+        child: FrostedPanel(
+          padding: const EdgeInsets.all(17),
+          borderRadius: BorderRadius.circular(20),
+          blur: 16,
+          color: const Color(0x9E0D0D0D),
+          borderColor: const Color(0x2EFFFFFF),
         child: Row(
           children: [
             Container(
               width: 38,
               height: 38,
               decoration: BoxDecoration(
-                color: OxygenForgeTheme.violet.withValues(alpha: 0.12),
+                color: const Color(0x1AFFFFFF),
                 borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0x30FFFFFF)),
               ),
               child: Icon(icon, color: OxygenForgeTheme.violetBright, size: 20),
             ),
@@ -948,6 +967,7 @@ class _PromptCard extends StatelessWidget {
             const Icon(Icons.arrow_outward_rounded, size: 16, color: OxygenForgeTheme.muted),
           ],
         ),
+      ),
       ),
     );
   }
@@ -989,11 +1009,11 @@ class _QuickActions extends StatelessWidget {
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
         children: [
-          _QuickActionChip(icon: Icons.hub_rounded, label: 'Try Connectors', onPressed: onProviders),
+          _QuickActionChip(icon: Icons.hub_rounded, label: 'Bağlantılar', onPressed: onProviders),
           const SizedBox(width: 8),
-          _QuickActionChip(icon: Icons.camera_alt_rounded, label: 'Open Camera', onPressed: onCamera),
+          _QuickActionChip(icon: Icons.camera_alt_rounded, label: 'Kamera', onPressed: onCamera),
           const SizedBox(width: 8),
-          _QuickActionChip(icon: Icons.photo_library_rounded, label: 'Choose Image', onPressed: onGallery),
+          _QuickActionChip(icon: Icons.photo_library_rounded, label: 'Görsel ekle', onPressed: onGallery),
         ],
       ),
     );
