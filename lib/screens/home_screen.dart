@@ -3059,170 +3059,252 @@ class _Composer extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(30, 6, 30, 12),
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 820),
-          child: AnimatedContainer(
-            duration: MediaQuery.disableAnimationsOf(context)
-                ? Duration.zero
-                : const Duration(milliseconds: 220),
-            curve: Curves.easeOutCubic,
-            padding: const EdgeInsets.fromLTRB(10, 3, 10, 3),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [Color(0xFF303034), OxygenForgeTheme.referenceSurface],
-              ),
-              borderRadius: BorderRadius.circular(999),
-              border: Border.all(
-                color: isListening
-                    ? OxygenForgeTheme.referenceBlueBright
-                    : const Color(0x52FFFFFF),
-              ),
-              boxShadow: [
-                const BoxShadow(
-                  color: Color(0x42000000),
-                  blurRadius: 22,
-                  offset: Offset(0, 10),
+          child: _ComposerPulse(
+            active: isListening,
+            child: AnimatedContainer(
+              duration: MediaQuery.disableAnimationsOf(context)
+                  ? Duration.zero
+                  : const Duration(milliseconds: 220),
+              curve: Curves.easeOutCubic,
+              padding: const EdgeInsets.fromLTRB(10, 3, 10, 3),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFF303034),
+                    OxygenForgeTheme.referenceSurface,
+                  ],
                 ),
-                if (isListening)
+                borderRadius: BorderRadius.circular(999),
+                border: Border.all(
+                  color: isListening
+                      ? OxygenForgeTheme.referenceBlueBright
+                      : const Color(0x52FFFFFF),
+                ),
+                boxShadow: [
                   const BoxShadow(
-                    color: Color(0x663A7BFF),
-                    blurRadius: 28,
-                    spreadRadius: 2,
+                    color: Color(0x42000000),
+                    blurRadius: 22,
+                    offset: Offset(0, 10),
                   ),
-              ],
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (workMode != WorkMode.general ||
-                    imageAttachmentName != null ||
-                    documentAttachmentName != null)
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(5, 0, 5, 4),
-                      child: Wrap(
-                        spacing: 6,
-                        runSpacing: 4,
-                        children: [
-                          ActionChip(
-                            avatar: const Icon(Icons.bolt_rounded, size: 14),
-                            label: Text(workMode.label),
-                            onPressed: isTyping ? null : onWorkMode,
-                            side: BorderSide.none,
-                            backgroundColor: OxygenForgeTheme.referenceBlueSoft,
-                            labelStyle: const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          if (imageAttachmentName != null)
-                            InputChip(
-                              avatar: const Icon(
-                                Icons.image_outlined,
-                                size: 15,
-                              ),
-                              label: ConstrainedBox(
-                                constraints: const BoxConstraints(
-                                  maxWidth: 150,
-                                ),
-                                child: Text(
-                                  imageAttachmentName!,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                              onDeleted: onClearImageAttachment,
-                              side: BorderSide.none,
-                              backgroundColor: const Color(0x18FFFFFF),
-                            ),
-                          if (documentAttachmentName != null)
-                            InputChip(
-                              avatar: const Icon(
-                                Icons.description_outlined,
-                                size: 15,
-                              ),
-                              label: ConstrainedBox(
-                                constraints: const BoxConstraints(
-                                  maxWidth: 150,
-                                ),
-                                child: Text(
-                                  documentAttachmentName!,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                              onDeleted: onClearDocumentAttachment,
-                              side: BorderSide.none,
-                              backgroundColor: const Color(0x18FFFFFF),
-                            ),
-                        ],
-                      ),
+                  if (isListening)
+                    const BoxShadow(
+                      color: Color(0x663A7BFF),
+                      blurRadius: 28,
+                      spreadRadius: 2,
                     ),
-                  ),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    _ComposerControl(
-                      onPressed: isTyping ? null : onAttachment,
-                      tooltip: 'Dosya veya görsel ekle',
-                      icon: Icons.add_rounded,
-                    ),
-                    Expanded(
-                      child: TextField(
-                        controller: controller,
-                        focusNode: focusNode,
-                        minLines: 1,
-                        maxLines: 3,
-                        textInputAction: TextInputAction.newline,
-                        onSubmitted: (_) => onSend(),
-                        style: const TextStyle(fontSize: 16),
-                        decoration: InputDecoration(
-                          hintText: 'OxygenForge AI’ye sor…',
-                          border: InputBorder.none,
-                          enabledBorder: InputBorder.none,
-                          focusedBorder: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 15,
-                          ),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (workMode != WorkMode.general ||
+                      imageAttachmentName != null ||
+                      documentAttachmentName != null)
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(5, 0, 5, 4),
+                        child: Wrap(
+                          spacing: 6,
+                          runSpacing: 4,
+                          children: [
+                            ActionChip(
+                              avatar: const Icon(Icons.bolt_rounded, size: 14),
+                              label: Text(workMode.label),
+                              onPressed: isTyping ? null : onWorkMode,
+                              side: BorderSide.none,
+                              backgroundColor:
+                                  OxygenForgeTheme.referenceBlueSoft,
+                              labelStyle: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            if (imageAttachmentName != null)
+                              InputChip(
+                                avatar: const Icon(
+                                  Icons.image_outlined,
+                                  size: 15,
+                                ),
+                                label: ConstrainedBox(
+                                  constraints: const BoxConstraints(
+                                    maxWidth: 150,
+                                  ),
+                                  child: Text(
+                                    imageAttachmentName!,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                onDeleted: onClearImageAttachment,
+                                side: BorderSide.none,
+                                backgroundColor: const Color(0x18FFFFFF),
+                              ),
+                            if (documentAttachmentName != null)
+                              InputChip(
+                                avatar: const Icon(
+                                  Icons.description_outlined,
+                                  size: 15,
+                                ),
+                                label: ConstrainedBox(
+                                  constraints: const BoxConstraints(
+                                    maxWidth: 150,
+                                  ),
+                                  child: Text(
+                                    documentAttachmentName!,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                onDeleted: onClearDocumentAttachment,
+                                side: BorderSide.none,
+                                backgroundColor: const Color(0x18FFFFFF),
+                              ),
+                          ],
                         ),
                       ),
                     ),
-                    _ComposerControl(
-                      onPressed: isTyping ? null : onVoice,
-                      tooltip: isListening ? 'Dinlemeyi durdur' : 'Sesli giriş',
-                      icon: isListening
-                          ? Icons.mic_rounded
-                          : Icons.mic_none_rounded,
-                    ),
-                    ValueListenableBuilder<TextEditingValue>(
-                      valueListenable: controller,
-                      builder: (context, value, _) {
-                        final canSend =
-                            value.text.trim().isNotEmpty ||
-                            imageAttachmentName != null ||
-                            documentAttachmentName != null;
-                        return _ComposerControl(
-                          onPressed: isTyping
-                              ? null
-                              : (canSend ? onSend : onVoice),
-                          tooltip: canSend ? 'Gönder' : 'Sesli giriş',
-                          icon: canSend
-                              ? Icons.arrow_upward_rounded
-                              : Icons.graphic_eq_rounded,
-                          background: OxygenForgeTheme.referenceBlue,
-                          foreground: Colors.white,
-                          size: 54,
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ],
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      _ComposerControl(
+                        onPressed: isTyping ? null : onAttachment,
+                        tooltip: 'Dosya veya görsel ekle',
+                        icon: Icons.add_rounded,
+                      ),
+                      Expanded(
+                        child: TextField(
+                          controller: controller,
+                          focusNode: focusNode,
+                          minLines: 1,
+                          maxLines: 3,
+                          textInputAction: TextInputAction.newline,
+                          onSubmitted: (_) => onSend(),
+                          style: const TextStyle(fontSize: 14.5),
+                          decoration: InputDecoration(
+                            hintText: 'OxygenForge AI’ye sor…',
+                            hintStyle: const TextStyle(
+                              color: OxygenForgeTheme.muted,
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w400,
+                            ),
+                            border: InputBorder.none,
+                            enabledBorder: InputBorder.none,
+                            focusedBorder: InputBorder.none,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 6,
+                            ),
+                          ),
+                        ),
+                      ),
+                      _ComposerControl(
+                        onPressed: isTyping ? null : onVoice,
+                        tooltip: isListening
+                            ? 'Dinlemeyi durdur'
+                            : 'Sesli giriş',
+                        icon: isListening
+                            ? Icons.mic_rounded
+                            : Icons.mic_none_rounded,
+                      ),
+                      ValueListenableBuilder<TextEditingValue>(
+                        valueListenable: controller,
+                        builder: (context, value, _) {
+                          final canSend =
+                              value.text.trim().isNotEmpty ||
+                              imageAttachmentName != null ||
+                              documentAttachmentName != null;
+                          return _ComposerControl(
+                            onPressed: isTyping
+                                ? null
+                                : (canSend ? onSend : onVoice),
+                            tooltip: canSend ? 'Gönder' : 'Sesli giriş',
+                            icon: canSend
+                                ? Icons.arrow_upward_rounded
+                                : Icons.graphic_eq_rounded,
+                            background: OxygenForgeTheme.referenceBlue,
+                            foreground: Colors.white,
+                            size: 54,
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),
       ),
     );
+  }
+}
+
+class _ComposerPulse extends StatefulWidget {
+  const _ComposerPulse({required this.active, required this.child});
+
+  final bool active;
+  final Widget child;
+
+  @override
+  State<_ComposerPulse> createState() => _ComposerPulseState();
+}
+
+class _ComposerPulseState extends State<_ComposerPulse>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1350),
+    );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _syncAnimation();
+  }
+
+  @override
+  void didUpdateWidget(covariant _ComposerPulse oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.active != widget.active) {
+      _syncAnimation();
+    }
+  }
+
+  void _syncAnimation() {
+    if (!mounted || !widget.active || MediaQuery.disableAnimationsOf(context)) {
+      _controller.stop();
+      _controller.value = 0;
+    } else if (!_controller.isAnimating) {
+      _controller.repeat(reverse: true);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+    return AnimatedBuilder(
+      animation: _controller,
+      child: widget.child,
+      builder: (context, child) {
+        final scale = widget.active && !reduceMotion
+            ? 1 + (_controller.value * 0.012)
+            : 1.0;
+        return Transform.scale(scale: scale, child: child);
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 }
 

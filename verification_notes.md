@@ -138,3 +138,11 @@ Alt oluşturucu referanstaki yüksek kapsül görünümünden daha alçak, tek s
 Kapsül odak ve dinleme durumlarında kontrollü renk/kenar/gölge geçişi kullanır. Düğmeler dokunmada haptik geri bildirim verir; ses/gönderme ikonları `AnimatedSwitcher` ile yumuşak biçimde değişir. Dinleme sırasında mavi alt ışık yükselir. Tüm bu hareketler sistemin `disableAnimations` tercihine saygı gösterir; mesaj metninin yeniden yazılma animasyonu geri getirilmemiştir.
 
 `flutter analyze` temiz geçti ve regresyon paketi **21/21 test** ile başarılı tamamlandı. Final APK `versionName 1.5.1`, `versionCode 20`, paket kimliği `com.oxygenforge.oxygenforge_ai` ve compileSdk 36 ile üretildi. APK Signature Scheme v2 imzası geçerli bulundu. Teslim APK SHA-256: `855cc8ccf1c2a03bab4efd8c4b0d121236419190cdddf7e16d6ea0d98a6df4ad`.
+
+## Görünür oluşturucu animasyonu ve küçük placeholder QA (1.5.2)
+
+`OxygenForge AI’ye sor…` placeholder metni 13.5 punto, normal ağırlık ve daha kısa dikey padding ile referans ölçüsüne indirildi. Metin alanı artık kapsül içinde daha dengeli bir görsel ağırlığa sahip.
+
+Oluşturucu kapsülüne dinleme sırasında görünür, yavaş nefes alma/pulse ölçek animasyonu eklendi. Mavi ses/gönderme aksiyonu bu animasyonla birlikte belirgin biçimde canlanır; kapsülün geçiş gölgesi ve kenar rengi dinleme durumunda güçlenir. İkon değişimleri `AnimatedSwitcher` ile yumuşak geçiş yapar. Animasyonlar `MediaQuery.disableAnimationsOf` ile kapatılabilir ve mesaj yanıtlarının yeniden yazılma davranışı değiştirilmemiştir.
+
+`flutter analyze` temiz geçti ve regresyon paketi **21/21 test** ile başarılı tamamlandı. Final APK `versionName 1.5.2`, `versionCode 21`, paket kimliği `com.oxygenforge.oxygenforge_ai` ve compileSdk 36 ile üretildi. APK Signature Scheme v2 imzası geçerli bulundu. Teslim APK SHA-256: `db0634416989cecae211e1f3c35ac6c580e5740938f1d2ab78a34328c811bc7d`.

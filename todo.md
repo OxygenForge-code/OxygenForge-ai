@@ -83,3 +83,8 @@
 - [x] Odak, dokunma, ses aksiyonu ve alt ışık için kontrollü mikro animasyonlar ekle
 - [x] Mesajların yeniden yazılmaması davranışını koruyan oluşturucu regresyon testi ekle
 - [x] Kompakt animasyonlu oluşturucu sürümü için Android release APK derle, doğrula ve teslim et
+
+- [x] `OxygenForge AI’ye sor…` placeholder tipografisini referans ölçüsüne küçült
+- [x] Kapsülde görünür nefes alma/ışık animasyonu ve ses düğmesinde pulse animasyonu uygula
+- [x] Animasyonların hareket azaltma tercihiyle uyumlu çalıştığını ve mesaj animasyonunun geri gelmediğini test et
+- [x] Placeholder ve animasyon düzeltmesi için Android release APK derle, doğrula ve teslim et
