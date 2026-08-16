@@ -10,7 +10,8 @@ void main() {
   ) async {
     SharedPreferences.setMockInitialValues({});
     await tester.pumpWidget(const OxygenForgeApp());
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
 
     expect(
       find.text('Hangi konuda ilgili\nyardımcı olabilirim?'),

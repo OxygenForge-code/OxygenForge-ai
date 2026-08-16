@@ -146,3 +146,11 @@ Kapsül odak ve dinleme durumlarında kontrollü renk/kenar/gölge geçişi kull
 Oluşturucu kapsülüne dinleme sırasında görünür, yavaş nefes alma/pulse ölçek animasyonu eklendi. Mavi ses/gönderme aksiyonu bu animasyonla birlikte belirgin biçimde canlanır; kapsülün geçiş gölgesi ve kenar rengi dinleme durumunda güçlenir. İkon değişimleri `AnimatedSwitcher` ile yumuşak geçiş yapar. Animasyonlar `MediaQuery.disableAnimationsOf` ile kapatılabilir ve mesaj yanıtlarının yeniden yazılma davranışı değiştirilmemiştir.
 
 `flutter analyze` temiz geçti ve regresyon paketi **21/21 test** ile başarılı tamamlandı. Final APK `versionName 1.5.2`, `versionCode 21`, paket kimliği `com.oxygenforge.oxygenforge_ai` ve compileSdk 36 ile üretildi. APK Signature Scheme v2 imzası geçerli bulundu. Teslim APK SHA-256: `db0634416989cecae211e1f3c35ac6c580e5740938f1d2ab78a34328c811bc7d`.
+
+## Gerçek görünür animasyon QA (1.5.3)
+
+Önceki küçük pulse yerine oluşturucu kapsülünün tamamını saran görünür bir animasyon katmanı kuruldu. Kapsül kenarında soldan sağa hareket eden mavi SweepGradient parlaklığı bulunur; dinleme durumunda kapsülün dışında ikinci mavi halka genişleyip daralır. Ana ses/gönderme aksiyonu hafif ama fark edilir biçimde büyüyüp küçülür. Bu animasyonlar yalnızca geçici ikon geçişi değil, sürekli çalışan bir görsel durum göstergesidir.
+
+Animasyon katmanı `CustomPainter` ile çizildiği için içerik düzenini sürekli yeniden kurmaz. Sistem hareket azaltma tercihi açık olduğunda döngü durur, parlaklık ve ölçek sabitlenir. Widget testi sonsuz animasyonlarda `pumpAndSettle` zaman aşımına girmeyecek şekilde kontrollü zaman ilerletmeyle güncellendi. `flutter analyze` temiz geçti ve regresyon paketi **21/21 test** ile başarılı tamamlandı.
+
+Final APK `versionName 1.5.3`, `versionCode 22`, paket kimliği `com.oxygenforge.oxygenforge_ai` ve compileSdk 36 ile üretildi. APK Signature Scheme v2 imzası geçerli bulundu. Teslim APK SHA-256: `56c5cb172a47f297191a5b05c73458061888116c460edbe2013ba3ec407b8c74`.

@@ -88,3 +88,9 @@
 - [x] Kapsülde görünür nefes alma/ışık animasyonu ve ses düğmesinde pulse animasyonu uygula
 - [x] Animasyonların hareket azaltma tercihiyle uyumlu çalıştığını ve mesaj animasyonunun geri gelmediğini test et
 - [x] Placeholder ve animasyon düzeltmesi için Android release APK derle, doğrula ve teslim et
+
+- [x] Mavi ses aksiyonuna görünür dış halka ve büyüyüp küçülen pulse animasyonu ekle
+- [x] Dinleme durumunda mikrofon/ses ikonunu canlı dalga çubuklarıyla zenginleştir
+- [x] Oluşturucu kapsülünde soldan sağa hareket eden parlaklık ve belirgin odak geçişi uygula
+- [x] Animasyonların gerçekten çalıştığını widget zaman ilerletme testleriyle doğrula
+- [x] Gerçek animasyonlu oluşturucu sürümü için Android release APK derle, doğrula ve teslim et

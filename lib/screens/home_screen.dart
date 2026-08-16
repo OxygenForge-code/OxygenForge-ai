@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'dart:math' as math;
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -3060,7 +3062,8 @@ class _Composer extends StatelessWidget {
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 820),
           child: _ComposerPulse(
-            active: isListening,
+            active: true,
+            listening: isListening,
             child: AnimatedContainer(
               duration: MediaQuery.disableAnimationsOf(context)
                   ? Duration.zero
@@ -3241,9 +3244,14 @@ class _Composer extends StatelessWidget {
 }
 
 class _ComposerPulse extends StatefulWidget {
-  const _ComposerPulse({required this.active, required this.child});
+  const _ComposerPulse({
+    required this.active,
+    required this.listening,
+    required this.child,
+  });
 
   final bool active;
+  final bool listening;
   final Widget child;
 
   @override
@@ -3259,7 +3267,7 @@ class _ComposerPulseState extends State<_ComposerPulse>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1350),
+      duration: const Duration(milliseconds: 1900),
     );
   }
 
@@ -3282,7 +3290,7 @@ class _ComposerPulseState extends State<_ComposerPulse>
       _controller.stop();
       _controller.value = 0;
     } else if (!_controller.isAnimating) {
-      _controller.repeat(reverse: true);
+      _controller.repeat();
     }
   }
 
@@ -3294,9 +3302,26 @@ class _ComposerPulseState extends State<_ComposerPulse>
       child: widget.child,
       builder: (context, child) {
         final scale = widget.active && !reduceMotion
-            ? 1 + (_controller.value * 0.012)
+            ? 1 + (0.018 * math.sin(_controller.value * math.pi * 2))
             : 1.0;
-        return Transform.scale(scale: scale, child: child);
+        return Stack(
+          clipBehavior: Clip.none,
+          alignment: Alignment.center,
+          children: [
+            Positioned.fill(
+              child: IgnorePointer(
+                child: CustomPaint(
+                  painter: _ComposerGlowPainter(
+                    progress: _controller.value,
+                    listening: widget.listening,
+                    reduceMotion: reduceMotion,
+                  ),
+                ),
+              ),
+            ),
+            Transform.scale(scale: scale, child: child),
+          ],
+        );
       },
     );
   }
@@ -3305,6 +3330,60 @@ class _ComposerPulseState extends State<_ComposerPulse>
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+}
+
+class _ComposerGlowPainter extends CustomPainter {
+  const _ComposerGlowPainter({
+    required this.progress,
+    required this.listening,
+    required this.reduceMotion,
+  });
+
+  final double progress;
+  final bool listening;
+  final bool reduceMotion;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = Offset.zero & size;
+    final rrect = RRect.fromRectAndRadius(
+      rect.deflate(1.5),
+      const Radius.circular(999),
+    );
+    final sweep = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = listening ? 3.0 : 2.2
+      ..shader = SweepGradient(
+        transform: GradientRotation(progress * math.pi * 2),
+        colors: listening
+            ? const [Color(0x001F6BFF), Color(0xFF6EA0FF), Color(0x001F6BFF)]
+            : const [Color(0x001F6BFF), Color(0xA83A7BFF), Color(0x00FFFFFF)],
+        stops: const [0.2, 0.5, 0.8],
+      ).createShader(rect);
+    canvas.drawRRect(rrect, sweep);
+
+    if (listening && !reduceMotion) {
+      final ring = Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2
+        ..color = Color.lerp(
+          const Color(0x503A7BFF),
+          const Color(0xD03A7BFF),
+          (math.sin(progress * math.pi * 2) + 1) / 2,
+        )!;
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(rect.inflate(4), const Radius.circular(999)),
+        ring,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _ComposerGlowPainter oldDelegate) {
+    return oldDelegate.progress != progress ||
+        oldDelegate.listening != listening ||
+        oldDelegate.reduceMotion != reduceMotion;
   }
 }
 
