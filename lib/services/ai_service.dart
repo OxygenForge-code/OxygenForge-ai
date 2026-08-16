@@ -106,6 +106,7 @@ class AiService {
     required List<ChatMessage> history,
     required AppSettings settings,
     AiAttachment? attachment,
+    String? runtimeInstruction,
   }) async {
     final latestUserMessage = history.lastWhere(
       (message) => message.role == MessageRole.user,
@@ -119,22 +120,40 @@ class AiService {
 
     if (settings.apiKey.trim().isEmpty) {
       await Future<void>.delayed(const Duration(milliseconds: 650));
-      return AiResponse(text: _demoReply(latestUserMessage.text, settings.provider));
+      return AiResponse(
+        text: _demoReply(latestUserMessage.text, settings.provider),
+      );
     }
 
     if (attachment != null && !settings.supportsVision) {
       throw AiServiceException(
         kind: AiFailureKind.visionUnsupported,
         provider: settings.provider,
-        message: '${settings.effectiveModel} modeli görsel içerik kabul etmiyor. Görsel analiz için bu profilin modelini değiştir veya görsel destekleyen başka bir profil seç.',
+        message:
+            '${settings.effectiveModel} modeli görsel içerik kabul etmiyor. Görsel analiz için bu profilin modelini değiştir veya görsel destekleyen başka bir profil seç.',
       );
     }
 
+    final systemPrompt = _mergeSystemPrompt(
+      settings.systemPrompt,
+      runtimeInstruction,
+    );
+
     switch (settings.provider) {
       case AiProvider.gemini:
-        return _replyWithGemini(history: history, settings: settings, attachment: attachment);
+        return _replyWithGemini(
+          history: history,
+          settings: settings,
+          attachment: attachment,
+          systemPrompt: systemPrompt,
+        );
       case AiProvider.anthropic:
-        return _replyWithAnthropic(history: history, settings: settings, attachment: attachment);
+        return _replyWithAnthropic(
+          history: history,
+          settings: settings,
+          attachment: attachment,
+          systemPrompt: systemPrompt,
+        );
       case AiProvider.openai:
       case AiProvider.groq:
       case AiProvider.openRouter:
@@ -142,7 +161,12 @@ class AiService {
       case AiProvider.together:
       case AiProvider.deepSeek:
       case AiProvider.custom:
-        return _replyWithOpenAiCompatible(history: history, settings: settings, attachment: attachment);
+        return _replyWithOpenAiCompatible(
+          history: history,
+          settings: settings,
+          attachment: attachment,
+          systemPrompt: systemPrompt,
+        );
     }
   }
 
@@ -195,7 +219,9 @@ class AiService {
       );
     } catch (error) {
       final text = error.toString();
-      if (text.contains('SocketFailed') || text.contains('Failed host lookup') || text.contains('No address associated')) {
+      if (text.contains('SocketFailed') ||
+          text.contains('Failed host lookup') ||
+          text.contains('No address associated')) {
         throw AiServiceException(
           kind: AiFailureKind.network,
           provider: settings.provider,
@@ -208,7 +234,8 @@ class AiService {
 
   String _networkMessage(String raw) {
     final clean = raw.replaceFirst('ClientException: ', '').trim();
-    if (clean.contains('Failed host lookup') || clean.contains('No address associated')) {
+    if (clean.contains('Failed host lookup') ||
+        clean.contains('No address associated')) {
       return 'Alan adı çözümlenemedi. Cihazın DNS veya internet bağlantısı api endpoint’ine erişemiyor.';
     }
     return clean.length > 180 ? '${clean.substring(0, 180)}…' : clean;
@@ -218,6 +245,7 @@ class AiService {
     required List<ChatMessage> history,
     required AppSettings settings,
     AiAttachment? attachment,
+    required String systemPrompt,
   }) async {
     final uri = _parseUri(settings.effectiveEndpoint, settings);
     final response = await _post(
@@ -235,7 +263,7 @@ class AiService {
         'model': settings.effectiveModel,
         'temperature': settings.temperature,
         'messages': [
-          {'role': 'system', 'content': settings.systemPrompt},
+          {'role': 'system', 'content': systemPrompt},
           ..._compatibleMessages(history, attachment: attachment),
         ],
       },
@@ -246,7 +274,9 @@ class AiService {
     final content = decoded?['choices']?[0]?['message']?['content'];
     if (content is String) {
       final parsedResponse = _parseAssistantResponse(content);
-      if (parsedResponse.text.isNotEmpty || parsedResponse.thinking != null) return parsedResponse;
+      if (parsedResponse.text.isNotEmpty || parsedResponse.thinking != null) {
+        return parsedResponse;
+      }
     }
     throw AiServiceException(
       kind: AiFailureKind.decoding,
@@ -259,9 +289,13 @@ class AiService {
     required List<ChatMessage> history,
     required AppSettings settings,
     AiAttachment? attachment,
+    required String systemPrompt,
   }) async {
     final endpoint = settings.effectiveEndpoint.endsWith('/')
-        ? settings.effectiveEndpoint.substring(0, settings.effectiveEndpoint.length - 1)
+        ? settings.effectiveEndpoint.substring(
+            0,
+            settings.effectiveEndpoint.length - 1,
+          )
         : settings.effectiveEndpoint;
     final uri = _parseUri(
       '$endpoint/models/${settings.effectiveModel}:generateContent?key=${Uri.encodeQueryComponent(settings.apiKey.trim())}',
@@ -275,7 +309,7 @@ class AiService {
       body: {
         'systemInstruction': {
           'parts': [
-            {'text': settings.systemPrompt},
+            {'text': systemPrompt},
           ],
         },
         'contents': history.asMap().entries.map((entry) {
@@ -283,7 +317,9 @@ class AiService {
           final parts = <Map<String, dynamic>>[
             {'text': message.text},
           ];
-          if (attachment != null && entry.key == history.length - 1 && message.role == MessageRole.user) {
+          if (attachment != null &&
+              entry.key == history.length - 1 &&
+              message.role == MessageRole.user) {
             parts.add({
               'inlineData': {
                 'mimeType': attachment.mimeType,
@@ -308,9 +344,15 @@ class AiService {
       final content = firstCandidate is Map ? firstCandidate['content'] : null;
       final parts = content is Map ? content['parts'] : null;
       if (parts is List) {
-        final text = parts.whereType<Map>().map((part) => part['text']).whereType<String>().join();
+        final text = parts
+            .whereType<Map>()
+            .map((part) => part['text'])
+            .whereType<String>()
+            .join();
         final parsedResponse = _parseAssistantResponse(text);
-        if (parsedResponse.text.isNotEmpty || parsedResponse.thinking != null) return parsedResponse;
+        if (parsedResponse.text.isNotEmpty || parsedResponse.thinking != null) {
+          return parsedResponse;
+        }
       }
     }
     throw AiServiceException(
@@ -324,6 +366,7 @@ class AiService {
     required List<ChatMessage> history,
     required AppSettings settings,
     AiAttachment? attachment,
+    required String systemPrompt,
   }) async {
     final response = await _post(
       uri: _parseUri(settings.effectiveEndpoint, settings),
@@ -337,10 +380,12 @@ class AiService {
         'model': settings.effectiveModel,
         'max_tokens': 2048,
         'temperature': settings.temperature,
-        'system': settings.systemPrompt,
+        'system': systemPrompt,
         'messages': history.asMap().entries.map((entry) {
           final message = entry.value;
-          if (attachment != null && entry.key == history.length - 1 && message.role == MessageRole.user) {
+          if (attachment != null &&
+              entry.key == history.length - 1 &&
+              message.role == MessageRole.user) {
             return {
               'role': 'user',
               'content': [
@@ -375,7 +420,9 @@ class AiService {
           .whereType<String>()
           .join();
       final parsedResponse = _parseAssistantResponse(text);
-      if (parsedResponse.text.isNotEmpty || parsedResponse.thinking != null) return parsedResponse;
+      if (parsedResponse.text.isNotEmpty || parsedResponse.thinking != null) {
+        return parsedResponse;
+      }
     }
     throw AiServiceException(
       kind: AiFailureKind.decoding,
@@ -384,17 +431,25 @@ class AiService {
     );
   }
 
-  List<Map<String, dynamic>> _compatibleMessages(List<ChatMessage> history, {AiAttachment? attachment}) {
+  List<Map<String, dynamic>> _compatibleMessages(
+    List<ChatMessage> history, {
+    AiAttachment? attachment,
+  }) {
     return history.asMap().entries.map((entry) {
       final message = entry.value;
-      if (attachment != null && entry.key == history.length - 1 && message.role == MessageRole.user) {
+      if (attachment != null &&
+          entry.key == history.length - 1 &&
+          message.role == MessageRole.user) {
         return {
           'role': 'user',
           'content': [
             {'type': 'text', 'text': message.text},
             {
               'type': 'image_url',
-              'image_url': {'url': 'data:${attachment.mimeType};base64,${attachment.base64Data}'},
+              'image_url': {
+                'url':
+                    'data:${attachment.mimeType};base64,${attachment.base64Data}',
+              },
             },
           ],
         };
@@ -418,6 +473,12 @@ class AiService {
     return uri;
   }
 
+  String _mergeSystemPrompt(String base, String? runtimeInstruction) {
+    final extra = runtimeInstruction?.trim() ?? '';
+    if (extra.isEmpty) return base;
+    return '$base\n\nÇalışma bağlamı:\n$extra';
+  }
+
   Map<String, dynamic>? _decodeResponse(String body, AppSettings settings) {
     try {
       final decoded = jsonDecode(body);
@@ -431,7 +492,11 @@ class AiService {
     }
   }
 
-  void _throwIfFailed(http.Response response, Map<String, dynamic>? decoded, AppSettings settings) {
+  void _throwIfFailed(
+    http.Response response,
+    Map<String, dynamic>? decoded,
+    AppSettings settings,
+  ) {
     if (response.statusCode >= 200 && response.statusCode < 300) return;
     final error = decoded?['error'];
     final message = error is Map ? error['message'] : null;
@@ -446,7 +511,8 @@ class AiService {
       kind: kind,
       provider: settings.provider,
       statusCode: response.statusCode,
-      message: message?.toString() ?? 'HTTP ${response.statusCode} yanıtı alındı.',
+      message:
+          message?.toString() ?? 'HTTP ${response.statusCode} yanıtı alındı.',
     );
   }
 
@@ -458,7 +524,9 @@ class AiService {
       return '';
     });
 
-    final unclosedStart = _unclosedReasoningStartPattern.firstMatch(visibleText);
+    final unclosedStart = _unclosedReasoningStartPattern.firstMatch(
+      visibleText,
+    );
     if (unclosedStart != null) {
       final thinking = visibleText.substring(unclosedStart.end).trim();
       if (thinking.isNotEmpty) thinkingParts.add(thinking);

@@ -66,3 +66,15 @@
 - [x] Çekmece, komut merkezi, çalışma panosu ve misyon kontrolünde tutarlı premium durum ekranları ve mikro etkileşimler oluştur
 - [x] Premium arayüz davranışlarını widget regresyonlarıyla doğrula
 - [x] Premium mobil arayüz sürümü için Android release APK derle, doğrula ve teslim et
+- [x] Metin tabanlı yerel dosyaları seçip AI bağlamına ekleyen güvenli dosya bağlamı akışını uygula
+- [x] Sohbet için amaç odaklı çalışma modları ve kalıcı son seçim desteği ekle
+- [x] Tek dokunuşla kullanılabilen kaydedilmiş istem kitaplığı ve özelleştirilmiş istem oluşturma akışını ekle
+- [x] Mesaj kopyalama, yeniden kullanma ve sohbet üretkenliği için güçlü ama yalın araçları tamamla
+- [x] Yeni final veri modelini, kalıcılık geçişini ve mobil arayüz akışlarını regresyon testleriyle doğrula
+- [x] Final özellik sürümü için Android release APK derle, doğrula ve teslim et
+
+- [x] Yeni ferah siyah referans düzeninde üst başlık, merkez simgesi, karşılama metni ve alt ışık hiyerarşisini uygula
+- [x] Tek kapsül oluşturucuyu mavi ses aksiyonu ve yeni referans geometrisiyle yeniden düzenle
+- [x] Üretkenlik araçlarını ve çalışma yüzeylerini yeni sade referans diliyle uyumlu tut
+- [x] Referans arayüzde mesaj animasyonunun tekrar etmediğini ve mevcut özelliklerin çalıştığını test et
+- [x] Derleme ortamını stabilize edip yeni referans arayüz APK’sını üret, doğrula ve teslim et

@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -11,9 +12,11 @@ void main() {
     await tester.pumpWidget(const OxygenForgeApp());
     await tester.pumpAndSettle();
 
-    expect(find.text('Görsel oluştur'), findsOneWidget);
-    expect(find.text('Yaz veya düzenle'), findsOneWidget);
-    expect(find.text('Web’de arama yap'), findsOneWidget);
-    expect(find.text('OxygenForge AI’ye sor'), findsOneWidget);
+    expect(
+      find.text('Hangi konuda ilgili\nyardımcı olabilirim?'),
+      findsOneWidget,
+    );
+    expect(find.byIcon(Icons.auto_awesome_rounded), findsAtLeastNWidgets(1));
+    expect(find.text('Genel modunda OxygenForge AI’ye sor'), findsOneWidget);
   });
 }

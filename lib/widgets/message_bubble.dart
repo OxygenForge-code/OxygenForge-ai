@@ -7,9 +7,10 @@ import '../models/chat_models.dart';
 import 'forge_logo.dart';
 
 class MessageBubble extends StatelessWidget {
-  const MessageBubble({required this.message, super.key});
+  const MessageBubble({required this.message, super.key, this.onReuse});
 
   final ChatMessage message;
+  final ValueChanged<String>? onReuse;
 
   @override
   Widget build(BuildContext context) {
@@ -135,6 +136,24 @@ class MessageBubble extends StatelessWidget {
                                     tooltip: 'Yanıtı kopyala',
                                     icon: const Icon(
                                       Icons.copy_rounded,
+                                      size: 15,
+                                      color: OxygenForgeTheme.muted,
+                                    ),
+                                    constraints: const BoxConstraints(
+                                      minWidth: 28,
+                                      minHeight: 28,
+                                    ),
+                                    padding: EdgeInsets.zero,
+                                  ),
+                                  IconButton(
+                                    onPressed: onReuse == null
+                                        ? null
+                                        : () => onReuse!(
+                                            'Bu yanıtı temel alarak devam et:\n\n${message.text}\n\n',
+                                          ),
+                                    tooltip: 'Yanıtı yeniden kullan',
+                                    icon: const Icon(
+                                      Icons.reply_rounded,
                                       size: 15,
                                       color: OxygenForgeTheme.muted,
                                     ),

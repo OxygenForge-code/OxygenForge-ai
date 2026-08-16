@@ -8,6 +8,7 @@ class LocalStore {
   static const _sessionsKey = 'oxygenforge.sessions.v1';
   static const _settingsKey = 'oxygenforge.settings.v3';
   static const _previousSettingsKey = 'oxygenforge.settings.v2';
+  static const _promptLibraryKey = 'oxygenforge.prompt_library.v1';
   static const _legacyApiKey = 'oxygenforge.api_key';
   static const _legacyEndpoint = 'oxygenforge.endpoint';
   static const _legacyModel = 'oxygenforge.model';
@@ -22,7 +23,10 @@ class LocalStore {
       if (decoded is! List) return <ChatSession>[];
       return decoded
           .whereType<Map>()
-          .map((session) => ChatSession.fromJson(Map<String, dynamic>.from(session)))
+          .map(
+            (session) =>
+                ChatSession.fromJson(Map<String, dynamic>.from(session)),
+          )
           .toList();
     } catch (_) {
       return <ChatSession>[];
@@ -39,7 +43,9 @@ class LocalStore {
 
   Future<AppSettings> loadSettings() async {
     final preferences = await SharedPreferences.getInstance();
-    final encoded = preferences.getString(_settingsKey) ?? preferences.getString(_previousSettingsKey);
+    final encoded =
+        preferences.getString(_settingsKey) ??
+        preferences.getString(_previousSettingsKey);
     if (encoded != null && encoded.isNotEmpty) {
       try {
         final decoded = jsonDecode(encoded);
@@ -49,11 +55,15 @@ class LocalStore {
           if (rawProfiles is List) {
             final profiles = rawProfiles
                 .whereType<Map>()
-                .map((profile) => ApiProfile.fromJson(Map<String, dynamic>.from(profile)))
+                .map(
+                  (profile) =>
+                      ApiProfile.fromJson(Map<String, dynamic>.from(profile)),
+                )
                 .toList();
             return AppSettings(
               profiles: profiles,
               selectedProfileId: json['selectedProfileId'] as String?,
+              workMode: workModeFromName(json['workMode'] as String?),
             );
           }
           return _migrateSingleSettings(json);
@@ -77,7 +87,10 @@ class LocalStore {
       createdAt: now,
       updatedAt: now,
     );
-    return AppSettings(profiles: <ApiProfile>[profile], selectedProfileId: profile.id);
+    return AppSettings(
+      profiles: <ApiProfile>[profile],
+      selectedProfileId: profile.id,
+    );
   }
 
   AppSettings _migrateSingleSettings(Map<String, dynamic> json) {
@@ -85,7 +98,9 @@ class LocalStore {
     final activeProvider = aiProviderFromName(json['provider'] as String?);
     final rawKeys = json['apiKeys'];
     final keys = rawKeys is Map
-        ? rawKeys.map((key, value) => MapEntry(key.toString(), value.toString()))
+        ? rawKeys.map(
+            (key, value) => MapEntry(key.toString(), value.toString()),
+          )
         : <String, String>{};
     final providers = <AiProvider>{activeProvider};
     for (final key in keys.keys) {
@@ -100,7 +115,9 @@ class LocalStore {
         apiKey: keys[provider.name] ?? '',
         endpoint: isActive ? json['endpoint'] as String? ?? '' : '',
         model: isActive ? json['model'] as String? ?? '' : '',
-        temperature: isActive ? (json['temperature'] as num?)?.toDouble() ?? 0.7 : 0.7,
+        temperature: isActive
+            ? (json['temperature'] as num?)?.toDouble() ?? 0.7
+            : 0.7,
         systemPrompt: isActive
             ? json['systemPrompt'] as String? ?? AppSettings.defaultSystemPrompt
             : AppSettings.defaultSystemPrompt,
@@ -108,7 +125,9 @@ class LocalStore {
         updatedAt: now,
       );
     }).toList();
-    final active = profiles.firstWhere((profile) => profile.provider == activeProvider);
+    final active = profiles.firstWhere(
+      (profile) => profile.provider == activeProvider,
+    );
     return AppSettings(profiles: profiles, selectedProfileId: active.id);
   }
 
@@ -117,9 +136,39 @@ class LocalStore {
     await preferences.setString(
       _settingsKey,
       jsonEncode({
-        'profiles': settings.profiles.map((profile) => profile.toJson()).toList(),
+        'profiles': settings.profiles
+            .map((profile) => profile.toJson())
+            .toList(),
         'selectedProfileId': settings.selectedProfileId,
+        'workMode': settings.workMode.name,
       }),
+    );
+  }
+
+  Future<List<PromptTemplate>> loadPromptTemplates() async {
+    final preferences = await SharedPreferences.getInstance();
+    final encoded = preferences.getString(_promptLibraryKey);
+    if (encoded == null || encoded.isEmpty) return <PromptTemplate>[];
+    try {
+      final decoded = jsonDecode(encoded);
+      if (decoded is! List) return <PromptTemplate>[];
+      return decoded
+          .whereType<Map>()
+          .map(
+            (item) => PromptTemplate.fromJson(Map<String, dynamic>.from(item)),
+          )
+          .where((template) => template.content.trim().isNotEmpty)
+          .toList();
+    } catch (_) {
+      return <PromptTemplate>[];
+    }
+  }
+
+  Future<void> savePromptTemplates(List<PromptTemplate> templates) async {
+    final preferences = await SharedPreferences.getInstance();
+    await preferences.setString(
+      _promptLibraryKey,
+      jsonEncode(templates.map((template) => template.toJson()).toList()),
     );
   }
 }

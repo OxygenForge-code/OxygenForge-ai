@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
@@ -38,8 +39,10 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isTyping = false;
   bool _isListening = false;
   AiAttachment? _attachment;
+  DocumentAttachment? _documentAttachment;
   AiServiceException? _lastError;
   String _sessionQuery = '';
+  List<PromptTemplate> _customPromptTemplates = <PromptTemplate>[];
 
   ChatSession? get _selectedSession {
     for (final session in _sessions) {
@@ -82,10 +85,12 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _loadWorkspace() async {
     final sessions = await _store.loadSessions();
     final settings = await _store.loadSettings();
+    final customPromptTemplates = await _store.loadPromptTemplates();
     if (!mounted) return;
     setState(() {
       _sessions = sessions;
       _settings = settings;
+      _customPromptTemplates = customPromptTemplates;
       _selectedSessionId = sessions.isEmpty ? null : sessions.first.id;
       _isLoading = false;
     });
@@ -826,11 +831,450 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  List<PromptTemplate> get _promptLibrary => <PromptTemplate>[
+    PromptTemplate(
+      id: 'builtin-decision-brief',
+      title: 'Karar özeti',
+      content: 'Bu konu için seçenekleri ölçütleriyle karşılaştır. Sonunda net bir öneri, riskler ve ilk adımı ver: ',
+      createdAt: DateTime.fromMillisecondsSinceEpoch(0),
+      isBuiltIn: true,
+    ),
+    PromptTemplate(
+      id: 'builtin-project-plan',
+      title: 'Proje planı',
+      content: 'Bu hedef için hedef çıktı, aşamalar, riskler, zamanlama ve ilk doğrulanabilir adımı içeren uygulanabilir bir plan hazırla: ',
+      createdAt: DateTime.fromMillisecondsSinceEpoch(0),
+      isBuiltIn: true,
+    ),
+    PromptTemplate(
+      id: 'builtin-red-team',
+      title: 'Kırmızı takım',
+      content: 'Bu fikri eleştirel biçimde test et. Varsayımları, başarısızlık ihtimallerini, kör noktaları ve iyileştirme önerilerini yaz: ',
+      createdAt: DateTime.fromMillisecondsSinceEpoch(0),
+      isBuiltIn: true,
+    ),
+    PromptTemplate(
+      id: 'builtin-code-review',
+      title: 'Kod incelemesi',
+      content: 'Aşağıdaki kodu doğruluk, güvenlik, performans ve sürdürülebilirlik açısından incele. Önce sorunları, sonra öncelikli düzeltmeleri ver: ',
+      createdAt: DateTime.fromMillisecondsSinceEpoch(0),
+      isBuiltIn: true,
+    ),
+    ..._customPromptTemplates,
+  ];
+
+  Future<void> _selectWorkMode() async {
+    final next = await showModalBottomSheet<WorkMode>(
+      context: context,
+      backgroundColor: OxygenForgeTheme.panel,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(18, 12, 18, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 42,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: OxygenForgeTheme.line,
+                  borderRadius: BorderRadius.circular(99),
+                ),
+              ),
+              const SizedBox(height: 14),
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'ÇALIŞMA MODU',
+                  style: TextStyle(
+                    color: OxygenForgeTheme.muted,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              ...WorkMode.values.map(
+                (mode) => ListTile(
+                  leading: Icon(_modeIcon(mode)),
+                  title: Text(mode.label),
+                  subtitle: Text(mode.subtitle),
+                  trailing: mode == _settings.workMode
+                      ? const Icon(Icons.check_circle_rounded)
+                      : null,
+                  onTap: () => Navigator.pop(sheetContext, mode),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (!mounted || next == null || next == _settings.workMode) return;
+    final settings = _settings.copyWith(workMode: next);
+    setState(() => _settings = settings);
+    await _store.saveSettings(settings);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text('${next.label} modu aktif.')));
+  }
+
+  Future<void> _openPromptLibrary() async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: OxygenForgeTheme.panel,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (context, setSheetState) => SafeArea(
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(
+              18,
+              12,
+              18,
+              18 + MediaQuery.viewInsetsOf(context).bottom,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 42,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: OxygenForgeTheme.line,
+                    borderRadius: BorderRadius.circular(99),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Row(
+                  children: [
+                    const Expanded(
+                      child: Text(
+                        'İSTEM KİTAPLIĞI',
+                        style: TextStyle(
+                          color: OxygenForgeTheme.muted,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 1.2,
+                        ),
+                      ),
+                    ),
+                    TextButton.icon(
+                      onPressed: () {
+                        Navigator.pop(sheetContext);
+                        _createPromptTemplate();
+                      },
+                      icon: const Icon(Icons.add_rounded, size: 18),
+                      label: const Text('Yeni'),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxHeight: 460),
+                  child: ListView.separated(
+                    shrinkWrap: true,
+                    itemCount: _promptLibrary.length,
+                    separatorBuilder: (_, _) => const Divider(height: 1),
+                    itemBuilder: (context, index) {
+                      final template = _promptLibrary[index];
+                      return ListTile(
+                        leading: Icon(
+                          template.isBuiltIn
+                              ? Icons.auto_awesome_outlined
+                              : Icons.bookmark_outline_rounded,
+                        ),
+                        title: Text(template.title),
+                        subtitle: Text(
+                          template.content,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        trailing: template.isBuiltIn
+                            ? const Icon(Icons.arrow_forward_rounded, size: 18)
+                            : IconButton(
+                                tooltip: 'İstemi sil',
+                                icon: const Icon(Icons.delete_outline_rounded),
+                                onPressed: () async {
+                                  setState(() {
+                                    _customPromptTemplates.removeWhere(
+                                      (item) => item.id == template.id,
+                                    );
+                                  });
+                                  setSheetState(() {});
+                                  await _store.savePromptTemplates(
+                                    _customPromptTemplates,
+                                  );
+                                },
+                              ),
+                        onTap: () {
+                          Navigator.pop(sheetContext);
+                          _usePrompt(template.content);
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _createPromptTemplate() async {
+    final titleController = TextEditingController();
+    final contentController = TextEditingController();
+    final next = await showDialog<PromptTemplate>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: OxygenForgeTheme.panel,
+        title: const Text('İstem kaydet'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: titleController,
+                maxLength: 48,
+                decoration: const InputDecoration(hintText: 'Kısa başlık'),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: contentController,
+                minLines: 4,
+                maxLines: 7,
+                decoration: const InputDecoration(
+                  hintText: 'Tekrar kullanmak istediğin istem...',
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Vazgeç'),
+          ),
+          FilledButton(
+            onPressed: () {
+              final title = titleController.text.trim();
+              final content = contentController.text.trim();
+              if (title.isEmpty || content.isEmpty) return;
+              Navigator.pop(
+                dialogContext,
+                PromptTemplate(
+                  id: DateTime.now().microsecondsSinceEpoch.toString(),
+                  title: title,
+                  content: content,
+                  createdAt: DateTime.now(),
+                ),
+              );
+            },
+            child: const Text('Kaydet'),
+          ),
+        ],
+      ),
+    );
+    titleController.dispose();
+    contentController.dispose();
+    if (!mounted || next == null) return;
+    setState(() => _customPromptTemplates = [next, ..._customPromptTemplates]);
+    await _store.savePromptTemplates(_customPromptTemplates);
+  }
+
+  Future<void> _openAttachmentMenu() async {
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: OxygenForgeTheme.panel,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 12, 12, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 42,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: OxygenForgeTheme.line,
+                  borderRadius: BorderRadius.circular(99),
+                ),
+              ),
+              const SizedBox(height: 12),
+              ListTile(
+                leading: const Icon(Icons.insert_drive_file_outlined),
+                title: const Text('Metin dosyası ekle'),
+                subtitle: const Text(
+                  'TXT, MD, CSV veya JSON içeriğini AI bağlamına ekle',
+                ),
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                  _pickDocument();
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library_outlined),
+                title: const Text('Galeriden görsel ekle'),
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                  _pickImage(ImageSource.gallery);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_camera_outlined),
+                title: const Text('Kamerayla görsel ekle'),
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                  _pickImage(ImageSource.camera);
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickDocument() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: const [
+        'txt',
+        'md',
+        'markdown',
+        'csv',
+        'json',
+        'yaml',
+        'yml',
+        'xml',
+        'html',
+        'dart',
+        'js',
+        'ts',
+        'py',
+      ],
+      withData: true,
+    );
+    if (result == null || result.files.isEmpty) return;
+    final file = result.files.single;
+    final bytes = file.bytes;
+    if (bytes == null) {
+      _showInfo(
+        'Dosya belleğe alınamadı. Lütfen daha küçük bir metin dosyası dene.',
+      );
+      return;
+    }
+    const maxBytes = 260 * 1024;
+    if (bytes.length > maxBytes) {
+      _showInfo(
+        'Dosya 260 KB sınırını aşıyor. Daha küçük bir metin dosyası seç.',
+      );
+      return;
+    }
+    final text = utf8
+        .decode(bytes, allowMalformed: true)
+        .replaceFirst('\uFEFF', '')
+        .trim();
+    if (text.isEmpty) {
+      _showInfo('Seçilen dosyada okunabilir metin bulunamadı.');
+      return;
+    }
+    if (!mounted) return;
+    setState(() {
+      _documentAttachment = DocumentAttachment(
+        name: file.name,
+        mimeType: _documentMimeType(file.extension),
+        content: text.length > 90000
+            ? '${text.substring(0, 90000)}\n\n[Dosya bağlamı sınır nedeniyle kısaltıldı.]'
+            : text,
+      );
+    });
+    _composerFocusNode.requestFocus();
+    _showInfo('${file.name} AI bağlamına eklendi.');
+  }
+
+  String _documentMimeType(String? extension) {
+    switch (extension?.toLowerCase()) {
+      case 'csv':
+        return 'text/csv';
+      case 'json':
+        return 'application/json';
+      case 'xml':
+        return 'application/xml';
+      case 'html':
+        return 'text/html';
+      case 'md':
+      case 'markdown':
+        return 'text/markdown';
+      default:
+        return 'text/plain';
+    }
+  }
+
+  String _runtimeInstruction() {
+    final blocks = <String>[_settings.workMode.instruction];
+    final document = _documentAttachment;
+    if (document != null) blocks.add(document.promptBlock);
+    return blocks.join('\n\n');
+  }
+
+  IconData _modeIcon(WorkMode mode) {
+    switch (mode) {
+      case WorkMode.general:
+        return Icons.auto_awesome_rounded;
+      case WorkMode.analyze:
+        return Icons.analytics_outlined;
+      case WorkMode.plan:
+        return Icons.route_outlined;
+      case WorkMode.create:
+        return Icons.brush_outlined;
+      case WorkMode.code:
+        return Icons.code_rounded;
+      case WorkMode.decide:
+        return Icons.account_tree_outlined;
+    }
+  }
+
+  void _showInfo(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
+  }
+
   Future<void> _openCommandCenter() async {
     final searchController = TextEditingController();
     var query = '';
     final commands =
         <({String label, String subtitle, IconData icon, VoidCallback action})>[
+          (
+            label: 'Çalışma modu',
+            subtitle: '${_settings.workMode.label} modu aktif',
+            icon: _modeIcon(_settings.workMode),
+            action: _selectWorkMode,
+          ),
+          (
+            label: 'İstem kitaplığı',
+            subtitle: 'Kaydedilmiş istemleri kullan veya yenisini oluştur',
+            icon: Icons.menu_book_outlined,
+            action: _openPromptLibrary,
+          ),
+          (
+            label: 'Dosya bağlamı',
+            subtitle: 'Metin dosyasını AI bağlamına ekle',
+            icon: Icons.attach_file_rounded,
+            action: _pickDocument,
+          ),
           (
             label: 'Yeni çalışma',
             subtitle: 'Boş bir AI çalışma alanı aç',
@@ -951,12 +1395,21 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _sendMessage() async {
     final selectedAttachment = _attachment;
+    final selectedDocument = _documentAttachment;
+    final runtimeInstruction = _runtimeInstruction();
     final typedPrompt = _composerController.text.trim();
-    final prompt = typedPrompt.isEmpty && selectedAttachment != null
-        ? 'Bu görseli analiz et.'
+    final prompt = typedPrompt.isEmpty
+        ? selectedAttachment != null
+              ? 'Bu görseli analiz et.'
+              : selectedDocument != null
+              ? '${selectedDocument.name} dosyasını analiz et.'
+              : ''
         : typedPrompt;
     final session = _selectedSession ?? _createAndSelectSession();
     if (prompt.isEmpty || _isTyping) return;
+    final storedPrompt = selectedDocument == null
+        ? prompt
+        : '$prompt\n\n[Dosya bağlamı: ${selectedDocument.name}]';
 
     setState(() {
       if (session.messages.isEmpty || session.title == 'Yeni çalışma') {
@@ -966,13 +1419,14 @@ class _HomeScreenState extends State<HomeScreen> {
         ChatMessage(
           id: DateTime.now().microsecondsSinceEpoch.toString(),
           role: MessageRole.user,
-          text: prompt,
+          text: storedPrompt,
           createdAt: DateTime.now(),
         ),
       );
       session.updatedAt = DateTime.now();
       _composerController.clear();
       _attachment = null;
+      _documentAttachment = null;
       _isTyping = true;
     });
     await _store.saveSessions(_sessions);
@@ -984,6 +1438,7 @@ class _HomeScreenState extends State<HomeScreen> {
         history: List<ChatMessage>.of(session.messages),
         settings: _settings,
         attachment: selectedAttachment,
+        runtimeInstruction: runtimeInstruction,
       );
       thinkingStopwatch.stop();
       if (!mounted) return;
@@ -1481,7 +1936,14 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildWorkspace(bool isCompact) {
     final session = _selectedSession;
     return DecoratedBox(
-      decoration: const BoxDecoration(color: Colors.black),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          stops: [0, 0.72, 1],
+          colors: [Colors.black, Colors.black, Color(0xFF0B1B52)],
+        ),
+      ),
       child: Column(
         children: [
           _WorkspaceHeader(
@@ -1491,6 +1953,7 @@ class _HomeScreenState extends State<HomeScreen> {
             profileName: _settings.activeProfile.name,
             model: _settings.effectiveModel,
             provider: _settings.provider,
+            workMode: _settings.workMode,
             connected: _settings.apiKey.isNotEmpty,
             onSettings: _openSettings,
             onCommandCenter: _openCommandCenter,
@@ -1503,11 +1966,16 @@ class _HomeScreenState extends State<HomeScreen> {
             focusNode: _composerFocusNode,
             isTyping: _isTyping,
             isListening: _isListening,
-            attachmentName: _attachment?.name,
+            imageAttachmentName: _attachment?.name,
+            documentAttachmentName: _documentAttachment?.name,
+            workMode: _settings.workMode,
             onSend: _sendMessage,
-            onGallery: () => _pickImage(ImageSource.gallery),
+            onAttachment: _openAttachmentMenu,
+            onWorkMode: _selectWorkMode,
             onVoice: _toggleVoice,
-            onClearAttachment: () => setState(() => _attachment = null),
+            onClearImageAttachment: () => setState(() => _attachment = null),
+            onClearDocumentAttachment: () =>
+                setState(() => _documentAttachment = null),
           ),
         ],
       ),
@@ -1548,6 +2016,7 @@ class _HomeScreenState extends State<HomeScreen> {
         return MessageBubble(
           key: ValueKey(messages[index].id),
           message: messages[index],
+          onReuse: _usePrompt,
         );
       },
     );
@@ -1562,6 +2031,7 @@ class _WorkspaceHeader extends StatelessWidget {
     required this.profileName,
     required this.model,
     required this.provider,
+    required this.workMode,
     required this.connected,
     required this.onSettings,
     required this.onCommandCenter,
@@ -1575,6 +2045,7 @@ class _WorkspaceHeader extends StatelessWidget {
   final String profileName;
   final String model;
   final AiProvider provider;
+  final WorkMode workMode;
   final bool connected;
   final VoidCallback onSettings;
   final VoidCallback onCommandCenter;
@@ -1589,6 +2060,7 @@ class _WorkspaceHeader extends StatelessWidget {
         profileName: profileName,
         provider: provider,
         model: model,
+        workMode: workMode,
         connected: connected,
         onSettings: onSettings,
         onCommandCenter: onCommandCenter,
@@ -1853,6 +2325,7 @@ class _MinimalHeader extends StatelessWidget {
     required this.profileName,
     required this.provider,
     required this.model,
+    required this.workMode,
     required this.connected,
     required this.onSettings,
     required this.onCommandCenter,
@@ -1862,6 +2335,7 @@ class _MinimalHeader extends StatelessWidget {
   final String profileName;
   final AiProvider provider;
   final String model;
+  final WorkMode workMode;
   final bool connected;
   final VoidCallback onSettings;
   final VoidCallback onCommandCenter;
@@ -1869,114 +2343,58 @@ class _MinimalHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+      padding: const EdgeInsets.fromLTRB(24, 18, 24, 4),
       child: Row(
         children: [
           Builder(
-            builder: (context) => _ReferenceCircleButton(
+            builder: (context) => _ReferenceTextButton(
               icon: Icons.menu_rounded,
               tooltip: 'Menüyü aç',
               onPressed: () => Scaffold.of(context).openDrawer(),
             ),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 5),
           Expanded(
-            child: Material(
-              color: Colors.transparent,
-              borderRadius: BorderRadius.circular(999),
-              child: InkWell(
-                onTap: () {
-                  HapticFeedback.selectionClick();
-                  onSettings();
-                },
-                borderRadius: BorderRadius.circular(999),
-                child: Container(
-                  height: 56,
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        Color(0xFF303034),
-                        OxygenForgeTheme.referenceSurface,
-                      ],
+            child: InkWell(
+              onTap: () {
+                HapticFeedback.selectionClick();
+                onSettings();
+              },
+              borderRadius: BorderRadius.circular(12),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Flexible(
+                      child: Text(
+                        'OxygenForge AI',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: OxygenForgeTheme.text,
+                          fontSize: 17,
+                          fontWeight: FontWeight.w500,
+                          letterSpacing: -0.35,
+                        ),
+                      ),
                     ),
-                    borderRadius: BorderRadius.circular(999),
-                    border: Border.all(color: const Color(0x5AFFFFFF)),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Color(0x26000000),
-                        blurRadius: 18,
-                        offset: Offset(0, 8),
-                      ),
-                    ],
-                  ),
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 8,
-                        height: 8,
-                        decoration: BoxDecoration(
-                          color: connected
-                              ? OxygenForgeTheme.referenceBlueBright
-                              : OxygenForgeTheme.muted,
-                          shape: BoxShape.circle,
-                          boxShadow: connected
-                              ? const [
-                                  BoxShadow(
-                                    color: OxygenForgeTheme.referenceBlue,
-                                    blurRadius: 10,
-                                  ),
-                                ]
-                              : null,
-                        ),
-                      ),
-                      const SizedBox(width: 9),
-                      Expanded(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'OXYGENFORGE',
-                              style: TextStyle(
-                                fontSize: 9,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: 1.25,
-                              ),
-                            ),
-                            Text(
-                              connected
-                                  ? '${provider.label} · $model'
-                                  : '$profileName · Demo modu',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                color: OxygenForgeTheme.muted,
-                                fontSize: 10.5,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const Icon(
-                        Icons.keyboard_arrow_down_rounded,
-                        color: OxygenForgeTheme.muted,
-                        size: 20,
-                      ),
-                    ],
-                  ),
+                    const SizedBox(width: 4),
+                    const Icon(
+                      Icons.keyboard_arrow_down_rounded,
+                      color: OxygenForgeTheme.muted,
+                      size: 20,
+                    ),
+                  ],
                 ),
               ),
             ),
           ),
-          const SizedBox(width: 16),
-          _ReferenceCircleButton(
-            icon: Icons.chat_bubble_outline_rounded,
-            tooltip: 'Araçlar',
+          _ReferenceTextButton(
+            icon: Icons.auto_awesome_rounded,
+            tooltip: 'Komut merkezi',
             onPressed: onCommandCenter,
+            accent: true,
           ),
         ],
       ),
@@ -1984,6 +2402,44 @@ class _MinimalHeader extends StatelessWidget {
   }
 }
 
+class _ReferenceTextButton extends StatelessWidget {
+  const _ReferenceTextButton({
+    required this.icon,
+    required this.tooltip,
+    required this.onPressed,
+    this.accent = false,
+  });
+
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback? onPressed;
+  final bool accent;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: tooltip,
+      child: InkWell(
+        onTap: () {
+          HapticFeedback.selectionClick();
+          onPressed?.call();
+        },
+        borderRadius: BorderRadius.circular(14),
+        child: SizedBox(
+          width: 40,
+          height: 40,
+          child: Icon(
+            icon,
+            size: 25,
+            color: accent ? OxygenForgeTheme.text : OxygenForgeTheme.muted,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ignore: unused_element
 class _ReferenceCircleButton extends StatelessWidget {
   const _ReferenceCircleButton({
     required this.icon,
@@ -2046,75 +2502,59 @@ class _WelcomeView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: EdgeInsets.fromLTRB(
-        compact ? 24 : 72,
-        28,
-        compact ? 24 : 72,
-        34,
-      ),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 560),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Center(child: _ForgeOrbitHero()),
-              const SizedBox(height: 22),
-              const Center(
-                child: Column(
-                  children: [
-                    Text(
-                      'Forge what matters.',
-                      style: TextStyle(
-                        fontSize: 27,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -0.8,
-                      ),
-                    ),
-                    SizedBox(height: 7),
-                    Text(
-                      'Fikirden sonuca, tek bir çalışma alanı.',
-                      style: TextStyle(
-                        color: OxygenForgeTheme.muted,
-                        fontSize: 13.5,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 32),
-              _ReferenceAction(
-                icon: Icons.image_outlined,
-                label: 'Görsel oluştur',
-                subtitle: 'Fikrine güçlü bir görsel yön ver',
-                prompt: 'Bir görsel oluşturmak istiyorum: ',
-                onTap: onPromptTap,
-              ),
-              const SizedBox(height: 12),
-              _ReferenceAction(
-                icon: Icons.edit_outlined,
-                label: 'Yaz veya düzenle',
-                subtitle: 'Metni daha net ve etkili hale getir',
-                prompt: 'Şu metni daha açık ve etkili hale getir: ',
-                onTap: onPromptTap,
-              ),
-              const SizedBox(height: 12),
-              _ReferenceAction(
-                icon: Icons.travel_explore_rounded,
-                label: 'Web’de arama yap',
-                subtitle: 'Araştırmayı somut bir plana dönüştür',
-                prompt: 'Bu konu hakkında web araştırması için güvenilir kaynaklar ve arama başlıkları öner: ',
-                onTap: onPromptTap,
-              ),
-            ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final minHeight = constraints.maxHeight.isFinite
+            ? constraints.maxHeight
+            : 560.0;
+        return SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(
+            compact ? 24 : 72,
+            12,
+            compact ? 24 : 72,
+            20,
           ),
-        ),
-      ),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: minHeight - 32),
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const _ForgeOrbitHero(),
+                  const SizedBox(height: 24),
+                  const Text(
+                    'Hangi konuda ilgili\nyardımcı olabilirim?',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 31,
+                      height: 1.16,
+                      fontWeight: FontWeight.w400,
+                      letterSpacing: -1.15,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    _welcomeHint,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: OxygenForgeTheme.muted,
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
+
+  static const String _welcomeHint =
+      'Dosya ekleyin, bir çalışma modu seçin veya doğrudan sorun.';
 }
 
+// ignore: unused_element
 class _ReferenceAction extends StatelessWidget {
   const _ReferenceAction({
     required this.icon,
@@ -2205,57 +2645,21 @@ class _ForgeOrbitHero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 184,
-      height: 184,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          Container(
-            width: 184,
-            height: 184,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: const Color(0x263A7BFF)),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x283A7BFF),
-                  blurRadius: 40,
-                  spreadRadius: 8,
-                ),
-              ],
-            ),
-          ),
-          Container(
-            width: 142,
-            height: 142,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: const RadialGradient(
-                colors: [Color(0x403A7BFF), Color(0x00101012)],
-              ),
-              border: Border.all(color: const Color(0x40FFFFFF)),
-            ),
-          ),
-          Container(
-            width: 98,
-            height: 98,
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [Color(0xFF4A86FF), Color(0xFF244A9D)],
-              ),
-              boxShadow: [BoxShadow(color: Color(0x703A7BFF), blurRadius: 24)],
-            ),
-            child: const Icon(
-              Icons.auto_awesome_rounded,
-              size: 42,
-              color: Colors.white,
-            ),
-          ),
+    return ShaderMask(
+      shaderCallback: (bounds) => const LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          Color(0xFFFF5D75),
+          Color(0xFFFFC93D),
+          Color(0xFF32D583),
+          Color(0xFF3984FF),
         ],
+      ).createShader(bounds),
+      child: const Icon(
+        Icons.auto_awesome_rounded,
+        size: 62,
+        color: Colors.white,
       ),
     );
   }
@@ -2622,22 +3026,30 @@ class _Composer extends StatelessWidget {
     required this.focusNode,
     required this.isTyping,
     required this.isListening,
-    required this.attachmentName,
+    required this.imageAttachmentName,
+    required this.documentAttachmentName,
+    required this.workMode,
     required this.onSend,
-    required this.onGallery,
+    required this.onAttachment,
+    required this.onWorkMode,
     required this.onVoice,
-    required this.onClearAttachment,
+    required this.onClearImageAttachment,
+    required this.onClearDocumentAttachment,
   });
 
   final TextEditingController controller;
   final FocusNode focusNode;
   final bool isTyping;
   final bool isListening;
-  final String? attachmentName;
+  final String? imageAttachmentName;
+  final String? documentAttachmentName;
+  final WorkMode workMode;
   final VoidCallback onSend;
-  final VoidCallback onGallery;
+  final VoidCallback onAttachment;
+  final VoidCallback onWorkMode;
   final VoidCallback onVoice;
-  final VoidCallback onClearAttachment;
+  final VoidCallback onClearImageAttachment;
+  final VoidCallback onClearDocumentAttachment;
 
   @override
   Widget build(BuildContext context) {
@@ -2672,23 +3084,67 @@ class _Composer extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                if (attachmentName != null)
+                if (workMode != WorkMode.general ||
+                    imageAttachmentName != null ||
+                    documentAttachmentName != null)
                   Align(
                     alignment: Alignment.centerLeft,
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(5, 0, 5, 4),
-                      child: InputChip(
-                        avatar: const Icon(Icons.image_outlined, size: 15),
-                        label: ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 210),
-                          child: Text(
-                            attachmentName!,
-                            overflow: TextOverflow.ellipsis,
+                      child: Wrap(
+                        spacing: 6,
+                        runSpacing: 4,
+                        children: [
+                          ActionChip(
+                            avatar: const Icon(Icons.bolt_rounded, size: 14),
+                            label: Text(workMode.label),
+                            onPressed: isTyping ? null : onWorkMode,
+                            side: BorderSide.none,
+                            backgroundColor: OxygenForgeTheme.referenceBlueSoft,
+                            labelStyle: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
-                        ),
-                        onDeleted: onClearAttachment,
-                        side: BorderSide.none,
-                        backgroundColor: const Color(0x18FFFFFF),
+                          if (imageAttachmentName != null)
+                            InputChip(
+                              avatar: const Icon(
+                                Icons.image_outlined,
+                                size: 15,
+                              ),
+                              label: ConstrainedBox(
+                                constraints: const BoxConstraints(
+                                  maxWidth: 150,
+                                ),
+                                child: Text(
+                                  imageAttachmentName!,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              onDeleted: onClearImageAttachment,
+                              side: BorderSide.none,
+                              backgroundColor: const Color(0x18FFFFFF),
+                            ),
+                          if (documentAttachmentName != null)
+                            InputChip(
+                              avatar: const Icon(
+                                Icons.description_outlined,
+                                size: 15,
+                              ),
+                              label: ConstrainedBox(
+                                constraints: const BoxConstraints(
+                                  maxWidth: 150,
+                                ),
+                                child: Text(
+                                  documentAttachmentName!,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              onDeleted: onClearDocumentAttachment,
+                              side: BorderSide.none,
+                              backgroundColor: const Color(0x18FFFFFF),
+                            ),
+                        ],
                       ),
                     ),
                   ),
@@ -2696,8 +3152,8 @@ class _Composer extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     _ComposerControl(
-                      onPressed: isTyping ? null : onGallery,
-                      tooltip: 'Görsel ekle',
+                      onPressed: isTyping ? null : onAttachment,
+                      tooltip: 'Dosya veya görsel ekle',
                       icon: Icons.add_rounded,
                     ),
                     Expanded(
@@ -2709,8 +3165,9 @@ class _Composer extends StatelessWidget {
                         textInputAction: TextInputAction.newline,
                         onSubmitted: (_) => onSend(),
                         style: const TextStyle(fontSize: 16),
-                        decoration: const InputDecoration(
-                          hintText: 'OxygenForge AI’ye sor',
+                        decoration: InputDecoration(
+                          hintText:
+                              '${workMode.label} modunda OxygenForge AI’ye sor',
                           border: InputBorder.none,
                           enabledBorder: InputBorder.none,
                           focusedBorder: InputBorder.none,
@@ -2733,7 +3190,8 @@ class _Composer extends StatelessWidget {
                       builder: (context, value, _) {
                         final canSend =
                             value.text.trim().isNotEmpty ||
-                            attachmentName != null;
+                            imageAttachmentName != null ||
+                            documentAttachmentName != null;
                         return _ComposerControl(
                           onPressed: isTyping
                               ? null

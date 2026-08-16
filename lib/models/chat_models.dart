@@ -1,5 +1,67 @@
 enum MessageRole { user, assistant }
 
+enum WorkMode { general, analyze, plan, create, code, decide }
+
+extension WorkModeDetails on WorkMode {
+  String get label {
+    switch (this) {
+      case WorkMode.general:
+        return 'Genel';
+      case WorkMode.analyze:
+        return 'Analiz';
+      case WorkMode.plan:
+        return 'Plan';
+      case WorkMode.create:
+        return 'Üret';
+      case WorkMode.code:
+        return 'Kod';
+      case WorkMode.decide:
+        return 'Karar';
+    }
+  }
+
+  String get subtitle {
+    switch (this) {
+      case WorkMode.general:
+        return 'Esnek yardımcı';
+      case WorkMode.analyze:
+        return 'Bulguları yapılandır';
+      case WorkMode.plan:
+        return 'Adım adım yol haritası';
+      case WorkMode.create:
+        return 'Fikri çıktıya dönüştür';
+      case WorkMode.code:
+        return 'Teknik çözüm üret';
+      case WorkMode.decide:
+        return 'Seçenekleri karşılaştır';
+    }
+  }
+
+  String get instruction {
+    switch (this) {
+      case WorkMode.general:
+        return 'Önce kullanıcının hedefini netleştir, sonra doğrudan ve uygulanabilir bir yanıt ver.';
+      case WorkMode.analyze:
+        return 'Bilgiyi varsayımlar, bulgular, riskler ve öneriler başlıklarıyla analiz et. Belirsiz noktaları açıkça belirt.';
+      case WorkMode.plan:
+        return 'Çıktıyı hedef, aşamalar, ilk somut adım ve başarı ölçütü başlıklarıyla uygulanabilir bir plana dönüştür.';
+      case WorkMode.create:
+        return 'Özgün, hedefe uygun ve teslim edilebilir bir çıktı üret. Gerekirse önce kısa yaratıcı yön önerisi ver.';
+      case WorkMode.code:
+        return 'Teknik taleplerde doğru, test edilebilir ve güvenli çözüm üret. Kodla birlikte kısa kullanım ve doğrulama notu ekle.';
+      case WorkMode.decide:
+        return 'Seçenekleri ölçütlere göre karşılaştır; ödünleşimleri, riskleri ve net öneriyi açıkça ayır.';
+    }
+  }
+}
+
+WorkMode workModeFromName(String? name) {
+  return WorkMode.values.firstWhere(
+    (mode) => mode.name == name,
+    orElse: () => WorkMode.general,
+  );
+}
+
 enum AiProvider {
   openai,
   gemini,
@@ -115,7 +177,9 @@ extension AiProviderLabel on AiProvider {
       case AiProvider.anthropic:
         return true;
       case AiProvider.openai:
-        return normalized.contains('gpt-4o') || normalized.contains('gpt-4.1') || normalized.contains('vision');
+        return normalized.contains('gpt-4o') ||
+            normalized.contains('gpt-4.1') ||
+            normalized.contains('vision');
       case AiProvider.groq:
         return normalized.contains('vision') || normalized.contains('llama-4');
       case AiProvider.openRouter:
@@ -123,10 +187,11 @@ extension AiProviderLabel on AiProvider {
       case AiProvider.together:
       case AiProvider.deepSeek:
       case AiProvider.custom:
-        return normalized.contains('vision') || normalized.contains('image') || normalized.contains('llama-4');
+        return normalized.contains('vision') ||
+            normalized.contains('image') ||
+            normalized.contains('llama-4');
     }
   }
-
 }
 
 AiProvider aiProviderFromName(String? name) {
@@ -137,11 +202,71 @@ AiProvider aiProviderFromName(String? name) {
 }
 
 class AiAttachment {
-  const AiAttachment({required this.name, required this.mimeType, required this.base64Data});
+  const AiAttachment({
+    required this.name,
+    required this.mimeType,
+    required this.base64Data,
+  });
 
   final String name;
   final String mimeType;
   final String base64Data;
+}
+
+class DocumentAttachment {
+  const DocumentAttachment({
+    required this.name,
+    required this.mimeType,
+    required this.content,
+  });
+
+  final String name;
+  final String mimeType;
+  final String content;
+
+  int get characterCount => content.length;
+
+  String get promptBlock =>
+      '''
+Dosya bağlamı: $name ($mimeType)
+---
+$content
+---
+Bu dosyayı yalnızca kullanıcının talebiyle ilgili olduğu ölçüde kullan. Dosyada bulunmayan bilgileri dosyadan gelmiş gibi gösterme.
+''';
+}
+
+class PromptTemplate {
+  const PromptTemplate({
+    required this.id,
+    required this.title,
+    required this.content,
+    required this.createdAt,
+    this.isBuiltIn = false,
+  });
+
+  final String id;
+  final String title;
+  final String content;
+  final DateTime createdAt;
+  final bool isBuiltIn;
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'title': title,
+    'content': content,
+    'createdAt': createdAt.toIso8601String(),
+  };
+
+  factory PromptTemplate.fromJson(Map<String, dynamic> json) {
+    final now = DateTime.now();
+    return PromptTemplate(
+      id: json['id'] as String? ?? now.microsecondsSinceEpoch.toString(),
+      title: json['title'] as String? ?? 'İsimsiz istem',
+      content: json['content'] as String? ?? '',
+      createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ?? now,
+    );
+  }
 }
 
 class ChatMessage {
@@ -166,25 +291,31 @@ class ChatMessage {
   final Duration? thinkingDuration;
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'role': role.name,
-        'text': text,
-        'createdAt': createdAt.toIso8601String(),
-        'provider': provider?.name,
-        'model': model,
-        'thinking': thinking,
-        'thinkingDurationMs': thinkingDuration?.inMilliseconds,
-      };
+    'id': id,
+    'role': role.name,
+    'text': text,
+    'createdAt': createdAt.toIso8601String(),
+    'provider': provider?.name,
+    'model': model,
+    'thinking': thinking,
+    'thinkingDurationMs': thinkingDuration?.inMilliseconds,
+  };
 
   factory ChatMessage.fromJson(Map<String, dynamic> json) {
     return ChatMessage(
-      id: json['id'] as String? ?? DateTime.now().microsecondsSinceEpoch.toString(),
+      id:
+          json['id'] as String? ??
+          DateTime.now().microsecondsSinceEpoch.toString(),
       role: (json['role'] as String?) == MessageRole.user.name
           ? MessageRole.user
           : MessageRole.assistant,
       text: json['text'] as String? ?? '',
-      createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ?? DateTime.now(),
-      provider: json['provider'] is String ? aiProviderFromName(json['provider'] as String) : null,
+      createdAt:
+          DateTime.tryParse(json['createdAt'] as String? ?? '') ??
+          DateTime.now(),
+      provider: json['provider'] is String
+          ? aiProviderFromName(json['provider'] as String)
+          : null,
       model: json['model'] as String?,
       thinking: json['thinking'] as String?,
       thinkingDuration: json['thinkingDurationMs'] is num
@@ -210,18 +341,22 @@ class WorkspaceTask {
   final String? sourceMessageId;
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'title': title,
-        'createdAt': createdAt.toIso8601String(),
-        'isCompleted': isCompleted,
-        'sourceMessageId': sourceMessageId,
-      };
+    'id': id,
+    'title': title,
+    'createdAt': createdAt.toIso8601String(),
+    'isCompleted': isCompleted,
+    'sourceMessageId': sourceMessageId,
+  };
 
   factory WorkspaceTask.fromJson(Map<String, dynamic> json) {
     return WorkspaceTask(
-      id: json['id'] as String? ?? DateTime.now().microsecondsSinceEpoch.toString(),
+      id:
+          json['id'] as String? ??
+          DateTime.now().microsecondsSinceEpoch.toString(),
       title: json['title'] as String? ?? 'Yeni görev',
-      createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ?? DateTime.now(),
+      createdAt:
+          DateTime.tryParse(json['createdAt'] as String? ?? '') ??
+          DateTime.now(),
       isCompleted: json['isCompleted'] as bool? ?? false,
       sourceMessageId: json['sourceMessageId'] as String?,
     );
@@ -244,19 +379,23 @@ class WorkspaceInsight {
   final String? sourceMessageId;
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'title': title,
-        'content': content,
-        'createdAt': createdAt.toIso8601String(),
-        'sourceMessageId': sourceMessageId,
-      };
+    'id': id,
+    'title': title,
+    'content': content,
+    'createdAt': createdAt.toIso8601String(),
+    'sourceMessageId': sourceMessageId,
+  };
 
   factory WorkspaceInsight.fromJson(Map<String, dynamic> json) {
     return WorkspaceInsight(
-      id: json['id'] as String? ?? DateTime.now().microsecondsSinceEpoch.toString(),
+      id:
+          json['id'] as String? ??
+          DateTime.now().microsecondsSinceEpoch.toString(),
       title: json['title'] as String? ?? 'Kaydedilen içgörü',
       content: json['content'] as String? ?? '',
-      createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ?? DateTime.now(),
+      createdAt:
+          DateTime.tryParse(json['createdAt'] as String? ?? '') ??
+          DateTime.now(),
       sourceMessageId: json['sourceMessageId'] as String?,
     );
   }
@@ -273,9 +412,9 @@ class ChatSession {
     List<ChatMessage>? messages,
     List<WorkspaceTask>? tasks,
     List<WorkspaceInsight>? insights,
-  })  : messages = messages ?? <ChatMessage>[],
-        tasks = tasks ?? <WorkspaceTask>[],
-        insights = insights ?? <WorkspaceInsight>[];
+  }) : messages = messages ?? <ChatMessage>[],
+       tasks = tasks ?? <WorkspaceTask>[],
+       insights = insights ?? <WorkspaceInsight>[];
 
   final String id;
   String title;
@@ -288,45 +427,61 @@ class ChatSession {
   final List<WorkspaceInsight> insights;
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'title': title,
-        'createdAt': createdAt.toIso8601String(),
-        'updatedAt': updatedAt.toIso8601String(),
-        'isPinned': isPinned,
-        'notes': notes,
-        'messages': messages.map((message) => message.toJson()).toList(),
-        'tasks': tasks.map((task) => task.toJson()).toList(),
-        'insights': insights.map((insight) => insight.toJson()).toList(),
-      };
+    'id': id,
+    'title': title,
+    'createdAt': createdAt.toIso8601String(),
+    'updatedAt': updatedAt.toIso8601String(),
+    'isPinned': isPinned,
+    'notes': notes,
+    'messages': messages.map((message) => message.toJson()).toList(),
+    'tasks': tasks.map((task) => task.toJson()).toList(),
+    'insights': insights.map((insight) => insight.toJson()).toList(),
+  };
 
   factory ChatSession.fromJson(Map<String, dynamic> json) {
     final rawMessages = json['messages'];
     final rawTasks = json['tasks'];
     final rawInsights = json['insights'];
     return ChatSession(
-      id: json['id'] as String? ?? DateTime.now().microsecondsSinceEpoch.toString(),
+      id:
+          json['id'] as String? ??
+          DateTime.now().microsecondsSinceEpoch.toString(),
       title: json['title'] as String? ?? 'Yeni çalışma',
-      createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ?? DateTime.now(),
-      updatedAt: DateTime.tryParse(json['updatedAt'] as String? ?? '') ?? DateTime.now(),
+      createdAt:
+          DateTime.tryParse(json['createdAt'] as String? ?? '') ??
+          DateTime.now(),
+      updatedAt:
+          DateTime.tryParse(json['updatedAt'] as String? ?? '') ??
+          DateTime.now(),
       isPinned: json['isPinned'] as bool? ?? false,
       notes: json['notes'] as String? ?? '',
       messages: rawMessages is List
           ? rawMessages
-              .whereType<Map>()
-              .map((message) => ChatMessage.fromJson(Map<String, dynamic>.from(message)))
-              .toList()
+                .whereType<Map>()
+                .map(
+                  (message) =>
+                      ChatMessage.fromJson(Map<String, dynamic>.from(message)),
+                )
+                .toList()
           : <ChatMessage>[],
       tasks: rawTasks is List
           ? rawTasks
-              .whereType<Map>()
-              .map((task) => WorkspaceTask.fromJson(Map<String, dynamic>.from(task)))
-              .toList()
+                .whereType<Map>()
+                .map(
+                  (task) =>
+                      WorkspaceTask.fromJson(Map<String, dynamic>.from(task)),
+                )
+                .toList()
           : <WorkspaceTask>[],
       insights: rawInsights is List
           ? rawInsights
-              .whereType<Map>()
-              .map((insight) => WorkspaceInsight.fromJson(Map<String, dynamic>.from(insight)))
-              .toList()
+                .whereType<Map>()
+                .map(
+                  (insight) => WorkspaceInsight.fromJson(
+                    Map<String, dynamic>.from(insight),
+                  ),
+                )
+                .toList()
           : <WorkspaceInsight>[],
     );
   }
@@ -353,12 +508,12 @@ class ApiProfile {
     required this.model,
     required this.temperature,
     required this.systemPrompt,
-  })  : id = 'legacy',
-        name = 'Varsayılan ${provider.label}',
-        provider = provider,
-        apiKey = apiKeys[provider.name] ?? '',
-        createdAt = DateTime.fromMillisecondsSinceEpoch(0),
-        updatedAt = DateTime.fromMillisecondsSinceEpoch(0);
+  }) : id = 'legacy',
+       name = 'Varsayılan ${provider.label}',
+       provider = provider,
+       apiKey = apiKeys[provider.name] ?? '',
+       createdAt = DateTime.fromMillisecondsSinceEpoch(0),
+       updatedAt = DateTime.fromMillisecondsSinceEpoch(0);
 
   final String id;
   final String name;
@@ -371,8 +526,10 @@ class ApiProfile {
   final DateTime createdAt;
   final DateTime updatedAt;
 
-  String get effectiveEndpoint => endpoint.trim().isEmpty ? provider.defaultEndpoint : endpoint.trim();
-  String get effectiveModel => model.trim().isEmpty ? provider.defaultModel : model.trim();
+  String get effectiveEndpoint =>
+      endpoint.trim().isEmpty ? provider.defaultEndpoint : endpoint.trim();
+  String get effectiveModel =>
+      model.trim().isEmpty ? provider.defaultModel : model.trim();
   bool get isReady => apiKey.trim().isNotEmpty;
 
   ApiProfile copyWith({
@@ -400,17 +557,17 @@ class ApiProfile {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'provider': provider.name,
-        'apiKey': apiKey,
-        'endpoint': endpoint,
-        'model': model,
-        'temperature': temperature,
-        'systemPrompt': systemPrompt,
-        'createdAt': createdAt.toIso8601String(),
-        'updatedAt': updatedAt.toIso8601String(),
-      };
+    'id': id,
+    'name': name,
+    'provider': provider.name,
+    'apiKey': apiKey,
+    'endpoint': endpoint,
+    'model': model,
+    'temperature': temperature,
+    'systemPrompt': systemPrompt,
+    'createdAt': createdAt.toIso8601String(),
+    'updatedAt': updatedAt.toIso8601String(),
+  };
 
   factory ApiProfile.fromJson(Map<String, dynamic> json) {
     final now = DateTime.now();
@@ -423,7 +580,8 @@ class ApiProfile {
       endpoint: json['endpoint'] as String? ?? '',
       model: json['model'] as String? ?? '',
       temperature: (json['temperature'] as num?)?.toDouble() ?? 0.7,
-      systemPrompt: json['systemPrompt'] as String? ?? AppSettings.defaultSystemPrompt,
+      systemPrompt:
+          json['systemPrompt'] as String? ?? AppSettings.defaultSystemPrompt,
       createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ?? now,
       updatedAt: DateTime.tryParse(json['updatedAt'] as String? ?? '') ?? now,
     );
@@ -440,14 +598,16 @@ class AppSettings {
     String systemPrompt = defaultSystemPrompt,
     this.profiles = const <ApiProfile>[],
     this.selectedProfileId,
-  })  : _legacyProvider = provider,
-        _legacyApiKeys = apiKeys,
-        _legacyEndpoint = endpoint,
-        _legacyModel = model,
-        _legacyTemperature = temperature,
-        _legacySystemPrompt = systemPrompt;
+    this.workMode = WorkMode.general,
+  }) : _legacyProvider = provider,
+       _legacyApiKeys = apiKeys,
+       _legacyEndpoint = endpoint,
+       _legacyModel = model,
+       _legacyTemperature = temperature,
+       _legacySystemPrompt = systemPrompt;
 
-  static const defaultSystemPrompt = 'You are OxygenForge AI, a concise, helpful assistant. Respond in the user\'s language.';
+  static const defaultSystemPrompt =
+      'You are OxygenForge AI, a concise, helpful assistant. Respond in the user\'s language.';
 
   final AiProvider _legacyProvider;
   final Map<String, String> _legacyApiKeys;
@@ -458,6 +618,7 @@ class AppSettings {
 
   final List<ApiProfile> profiles;
   final String? selectedProfileId;
+  final WorkMode workMode;
 
   bool get hasProfiles => profiles.isNotEmpty;
 
@@ -498,6 +659,7 @@ class AppSettings {
     String? systemPrompt,
     List<ApiProfile>? profiles,
     String? selectedProfileId,
+    WorkMode? workMode,
   }) {
     return AppSettings(
       provider: provider ?? _legacyProvider,
@@ -508,13 +670,18 @@ class AppSettings {
       systemPrompt: systemPrompt ?? _legacySystemPrompt,
       profiles: profiles ?? this.profiles,
       selectedProfileId: selectedProfileId ?? this.selectedProfileId,
+      workMode: workMode ?? this.workMode,
     );
   }
 
-  AppSettings withProfiles(List<ApiProfile> nextProfiles, {String? activeProfileId}) {
+  AppSettings withProfiles(
+    List<ApiProfile> nextProfiles, {
+    String? activeProfileId,
+  }) {
     return AppSettings(
       profiles: List<ApiProfile>.unmodifiable(nextProfiles),
       selectedProfileId: activeProfileId ?? selectedProfileId,
+      workMode: workMode,
     );
   }
 }
