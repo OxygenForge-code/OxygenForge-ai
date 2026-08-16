@@ -3056,11 +3056,15 @@ class _Composer extends StatelessWidget {
     return SafeArea(
       top: false,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(30, 10, 30, 24),
+        padding: const EdgeInsets.fromLTRB(30, 6, 30, 12),
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 820),
-          child: Container(
-            padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+          child: AnimatedContainer(
+            duration: MediaQuery.disableAnimationsOf(context)
+                ? Duration.zero
+                : const Duration(milliseconds: 220),
+            curve: Curves.easeOutCubic,
+            padding: const EdgeInsets.fromLTRB(10, 3, 10, 3),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
                 begin: Alignment.topLeft,
@@ -3073,12 +3077,18 @@ class _Composer extends StatelessWidget {
                     ? OxygenForgeTheme.referenceBlueBright
                     : const Color(0x52FFFFFF),
               ),
-              boxShadow: const [
-                BoxShadow(
+              boxShadow: [
+                const BoxShadow(
                   color: Color(0x42000000),
                   blurRadius: 22,
                   offset: Offset(0, 10),
                 ),
+                if (isListening)
+                  const BoxShadow(
+                    color: Color(0x663A7BFF),
+                    blurRadius: 28,
+                    spreadRadius: 2,
+                  ),
               ],
             ),
             child: Column(
@@ -3161,13 +3171,12 @@ class _Composer extends StatelessWidget {
                         controller: controller,
                         focusNode: focusNode,
                         minLines: 1,
-                        maxLines: 5,
+                        maxLines: 3,
                         textInputAction: TextInputAction.newline,
                         onSubmitted: (_) => onSend(),
                         style: const TextStyle(fontSize: 16),
                         decoration: InputDecoration(
-                          hintText:
-                              '${workMode.label} modunda OxygenForge AI’ye sor',
+                          hintText: 'OxygenForge AI’ye sor…',
                           border: InputBorder.none,
                           enabledBorder: InputBorder.none,
                           focusedBorder: InputBorder.none,
@@ -3202,7 +3211,7 @@ class _Composer extends StatelessWidget {
                               : Icons.graphic_eq_rounded,
                           background: OxygenForgeTheme.referenceBlue,
                           foreground: Colors.white,
-                          size: 60,
+                          size: 54,
                         );
                       },
                     ),
@@ -3264,10 +3273,23 @@ class _ComposerControl extends StatelessWidget {
               width: size,
               height: size,
               child: Center(
-                child: Icon(
-                  icon,
-                  size: 30,
-                  color: foreground ?? OxygenForgeTheme.text,
+                child: AnimatedSwitcher(
+                  duration: MediaQuery.disableAnimationsOf(context)
+                      ? Duration.zero
+                      : const Duration(milliseconds: 180),
+                  transitionBuilder: (child, animation) => ScaleTransition(
+                    scale: CurvedAnimation(
+                      parent: animation,
+                      curve: Curves.easeOutBack,
+                    ),
+                    child: FadeTransition(opacity: animation, child: child),
+                  ),
+                  child: Icon(
+                    icon,
+                    key: ValueKey(icon),
+                    size: 30,
+                    color: foreground ?? OxygenForgeTheme.text,
+                  ),
                 ),
               ),
             ),

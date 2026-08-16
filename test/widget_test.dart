@@ -17,6 +17,6 @@ void main() {
       findsOneWidget,
     );
     expect(find.byIcon(Icons.auto_awesome_rounded), findsAtLeastNWidgets(1));
-    expect(find.text('Genel modunda OxygenForge AI’ye sor'), findsOneWidget);
+    expect(find.text('OxygenForge AI’ye sor…'), findsOneWidget);
   });
 }

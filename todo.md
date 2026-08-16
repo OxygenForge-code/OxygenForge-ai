@@ -78,3 +78,8 @@
 - [x] Üretkenlik araçlarını ve çalışma yüzeylerini yeni sade referans diliyle uyumlu tut
 - [x] Referans arayüzde mesaj animasyonunun tekrar etmediğini ve mevcut özelliklerin çalıştığını test et
 - [x] Derleme ortamını stabilize edip yeni referans arayüz APK’sını üret, doğrula ve teslim et
+
+- [x] Alt oluşturucu kapsülünün yüksekliğini tek satırlı referans geometrisine indir
+- [x] Odak, dokunma, ses aksiyonu ve alt ışık için kontrollü mikro animasyonlar ekle
+- [x] Mesajların yeniden yazılmaması davranışını koruyan oluşturucu regresyon testi ekle
+- [x] Kompakt animasyonlu oluşturucu sürümü için Android release APK derle, doğrula ve teslim et

@@ -130,3 +130,11 @@ Ana sohbet, paylaşılan yeni referansın ferah siyah düzenine uyarlandı. Üst
 Önceki final üretkenlik özellikleri korunmuştur: çalışma modları, metin dosyası bağlamı, kaydedilmiş istemler, mesaj kopyalama ve yanıtı yeniden kullanma. Mesaj metni doğrudan render edildiğinden uygulama yeniden açıldığında veya liste kaydırma sonrası tekrar yazılmaz. `flutter analyze` temiz geçti ve tüm regresyon paketi **21/21 test** ile başarılı tamamlandı.
 
 Android release derlemesinde file_picker bağımlılığı için `flutter_plugin_android_lifecycle` 2.0.22 override’ı ve proje genelinde compileSdk 36 uyumluluğu uygulandı. Gradle 9 lint raporu doğrulama görevi sandbox ortamında eksik rapor girdisiyle durduğu için son paketleme, kaynak analizi ve testler ayrı doğrulanarak lintVital görevleri hariç doğrudan `assembleRelease` ile tamamlandı. Final APK `versionName 1.5.0`, `versionCode 19`, paket kimliği `com.oxygenforge.oxygenforge_ai` ve compileSdk 36 ile üretildi. APK Signature Scheme v2 imzası geçerli bulundu. Teslim APK SHA-256: `842c1575c5b6ac30b1a84890a8a3a5831c1ee4df43c92f6d579a3b7d9df3c9c3`.
+
+## Kompakt animasyonlu oluşturucu QA (1.5.1)
+
+Alt oluşturucu referanstaki yüksek kapsül görünümünden daha alçak, tek satırlı bir düzene indirildi. Dış boşluklar ve iç padding azaltıldı; metin alanı en fazla üç satırla sınırlandı ve varsayılan placeholder `OxygenForge AI’ye sor…` olarak sadeleştirildi. Çalışma modu ve dosya bağlamı yongaları yalnızca aktif olduklarında görünür.
+
+Kapsül odak ve dinleme durumlarında kontrollü renk/kenar/gölge geçişi kullanır. Düğmeler dokunmada haptik geri bildirim verir; ses/gönderme ikonları `AnimatedSwitcher` ile yumuşak biçimde değişir. Dinleme sırasında mavi alt ışık yükselir. Tüm bu hareketler sistemin `disableAnimations` tercihine saygı gösterir; mesaj metninin yeniden yazılma animasyonu geri getirilmemiştir.
+
+`flutter analyze` temiz geçti ve regresyon paketi **21/21 test** ile başarılı tamamlandı. Final APK `versionName 1.5.1`, `versionCode 20`, paket kimliği `com.oxygenforge.oxygenforge_ai` ve compileSdk 36 ile üretildi. APK Signature Scheme v2 imzası geçerli bulundu. Teslim APK SHA-256: `855cc8ccf1c2a03bab4efd8c4b0d121236419190cdddf7e16d6ea0d98a6df4ad`.
