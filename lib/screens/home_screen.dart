@@ -2543,6 +2543,32 @@ class _WelcomeView extends StatelessWidget {
                       fontSize: 13,
                     ),
                   ),
+                  const SizedBox(height: 24),
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _WelcomeModeChip(
+                        icon: Icons.account_tree_outlined,
+                        label: 'Planla',
+                        prompt: 'Bu hedef için net ve uygulanabilir bir plan hazırla.',
+                        onTap: onPromptTap,
+                      ),
+                      _WelcomeModeChip(
+                        icon: Icons.auto_graph_rounded,
+                        label: 'Analiz et',
+                        prompt: 'Bu konuyu güçlü yönler, riskler ve önerilerle analiz et.',
+                        onTap: onPromptTap,
+                      ),
+                      _WelcomeModeChip(
+                        icon: Icons.edit_note_rounded,
+                        label: 'Üret',
+                        prompt: 'Bu fikri etkileyici ve hazır kullanılabilir bir çıktıya dönüştür.',
+                        onTap: onPromptTap,
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -2647,21 +2673,107 @@ class _ForgeOrbitHero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ShaderMask(
-      shaderCallback: (bounds) => const LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [
-          Color(0xFFFF5D75),
-          Color(0xFFFFC93D),
-          Color(0xFF32D583),
-          Color(0xFF3984FF),
+    return SizedBox(
+      width: 136,
+      height: 120,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Container(
+            width: 108,
+            height: 108,
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: RadialGradient(
+                colors: [Color(0x263A7BFF), Color(0x00000000)],
+              ),
+            ),
+          ),
+          TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0.9, end: 1),
+            duration: MediaQuery.disableAnimationsOf(context)
+                ? Duration.zero
+                : const Duration(milliseconds: 720),
+            curve: Curves.easeOutBack,
+            builder: (context, value, child) => Transform.scale(
+              scale: value,
+              child: Opacity(opacity: math.min(1, value), child: child),
+            ),
+            child: ShaderMask(
+              shaderCallback: (bounds) => const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFFFF5D75),
+                  Color(0xFFFFC93D),
+                  Color(0xFF32D583),
+                  Color(0xFF3984FF),
+                ],
+              ).createShader(bounds),
+              child: const Icon(
+                Icons.auto_awesome_rounded,
+                size: 66,
+                color: Colors.white,
+              ),
+            ),
+          ),
+          Positioned(
+            top: 22,
+            right: 20,
+            child: Container(
+              width: 7,
+              height: 7,
+              decoration: const BoxDecoration(
+                color: OxygenForgeTheme.referenceBlueBright,
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
         ],
-      ).createShader(bounds),
-      child: const Icon(
-        Icons.auto_awesome_rounded,
-        size: 62,
-        color: Colors.white,
+      ),
+    );
+  }
+}
+
+class _WelcomeModeChip extends StatelessWidget {
+  const _WelcomeModeChip({
+    required this.icon,
+    required this.label,
+    required this.prompt,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final String prompt;
+  final ValueChanged<String> onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () {
+        HapticFeedback.selectionClick();
+        onTap(prompt);
+      },
+      borderRadius: BorderRadius.circular(999),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+        decoration: BoxDecoration(
+          color: OxygenForgeTheme.referenceHighlight,
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: OxygenForgeTheme.surfaceStroke),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 15, color: OxygenForgeTheme.referenceBlueBright),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -3505,14 +3617,23 @@ class _SessionTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: selected ? const Color(0x16FFFFFF) : Colors.transparent,
-        borderRadius: BorderRadius.circular(10),
+        gradient: selected
+            ? const LinearGradient(
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+                colors: [Color(0x2A3A7BFF), Color(0x0A3A7BFF)],
+              )
+            : null,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: selected ? const Color(0x5C6DA4FF) : Colors.transparent,
+        ),
       ),
       child: ListTile(
         onTap: onTap,
         onLongPress: onActions,
         dense: true,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 10),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 11, vertical: 2),
         leading: Icon(
           selected
               ? Icons.chat_bubble_rounded
@@ -3575,9 +3696,20 @@ class _ConnectionCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: const Color(0xFF111111),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: OxygenForgeTheme.line),
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF1F1F23), Color(0xFF121214)],
+          ),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: OxygenForgeTheme.surfaceStroke),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x28000000),
+              blurRadius: 16,
+              offset: Offset(0, 8),
+            ),
+          ],
         ),
         child: Row(
           children: [
@@ -3585,7 +3717,9 @@ class _ConnectionCard extends StatelessWidget {
               connected
                   ? Icons.check_circle_outline_rounded
                   : Icons.key_outlined,
-              color: OxygenForgeTheme.muted,
+              color: connected
+                  ? OxygenForgeTheme.referenceBlueBright
+                  : OxygenForgeTheme.muted,
               size: 19,
             ),
             const SizedBox(width: 10),

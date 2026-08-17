@@ -2,16 +2,18 @@ import 'package:flutter/material.dart';
 
 class OxygenForgeTheme {
   static const ink = Colors.black;
-  static const panel = Color(0xFF161616);
-  static const panelRaised = Color(0xFF242424);
-  static const line = Color(0xFF484848);
-  static const referenceSurface = Color(0xFF242424);
-  static const referenceSurfacePressed = Color(0xFF303030);
+  static const panel = Color(0xFF121212);
+  static const panelRaised = Color(0xFF1D1D20);
+  static const line = Color(0xFF35353A);
+  static const referenceSurface = Color(0xFF1A1A1D);
+  static const referenceSurfacePressed = Color(0xFF2A2A2F);
   static const referenceBlue = Color(0xFF3A7BFF);
   static const referenceBlueBright = Color(0xFF6DA4FF);
   static const referenceBlueSoft = Color(0x263A7BFF);
-  static const referenceDeep = Color(0xFF0F0F12);
-  static const referenceHighlight = Color(0x14FFFFFF);
+  static const referenceDeep = Color(0xFF09090B);
+  static const referenceHighlight = Color(0x1FFFFFFF);
+  static const surfaceGlow = Color(0x1F3A7BFF);
+  static const surfaceStroke = Color(0x3AFFFFFF);
   static const glass = Color(0xC90B0B0B);
   static const glassSoft = Color(0x9C121212);
   static const glassEdge = Color(0x42FFFFFF);
@@ -46,45 +48,45 @@ class OxygenForgeTheme {
         fontFamily: 'Inter',
       ),
       cardTheme: CardThemeData(
-        color: panel,
+        color: referenceSurface,
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
-          side: const BorderSide(color: line),
+          side: const BorderSide(color: surfaceStroke),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: panelRaised,
+        fillColor: referenceSurface,
         hintStyle: const TextStyle(color: muted),
         labelStyle: const TextStyle(color: muted),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(28),
-          borderSide: const BorderSide(color: line),
+          borderSide: const BorderSide(color: surfaceStroke),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(28),
-          borderSide: const BorderSide(color: line),
+          borderSide: const BorderSide(color: surfaceStroke),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(28),
-          borderSide: const BorderSide(color: violetBright, width: 1.2),
+          borderSide: const BorderSide(color: referenceBlueBright, width: 1.4),
         ),
       ),
       dividerColor: line,
       snackBarTheme: SnackBarThemeData(
-        backgroundColor: panelRaised,
+        backgroundColor: referenceSurfacePressed,
         contentTextStyle: const TextStyle(color: text),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         behavior: SnackBarBehavior.floating,
       ),
       navigationDrawerTheme: NavigationDrawerThemeData(
-        backgroundColor: panel,
-        indicatorColor: violet.withValues(alpha: 0.15),
+        backgroundColor: referenceDeep,
+        indicatorColor: referenceBlueSoft,
       ),
       bottomSheetTheme: const BottomSheetThemeData(
-        backgroundColor: panel,
-        modalBackgroundColor: panel,
+        backgroundColor: referenceDeep,
+        modalBackgroundColor: referenceDeep,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
         ),
@@ -124,9 +126,25 @@ class FrostedPanel extends StatelessWidget {
     return Container(
       padding: padding,
       decoration: BoxDecoration(
-        color: color ?? OxygenForgeTheme.referenceSurface,
+        gradient: color == null
+            ? const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFF202024), OxygenForgeTheme.referenceSurface],
+              )
+            : null,
+        color: color,
         borderRadius: borderRadius,
-        border: Border.all(color: borderColor ?? OxygenForgeTheme.line),
+        border: Border.all(
+          color: borderColor ?? OxygenForgeTheme.surfaceStroke,
+        ),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x38000000),
+            blurRadius: 24,
+            offset: Offset(0, 12),
+          ),
+        ],
       ),
       child: child,
     );

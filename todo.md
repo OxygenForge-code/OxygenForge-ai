@@ -94,3 +94,8 @@
 - [x] Oluşturucu kapsülünde soldan sağa hareket eden parlaklık ve belirgin odak geçişi uygula
 - [x] Animasyonların gerçekten çalıştığını widget zaman ilerletme testleriyle doğrula
 - [x] Gerçek animasyonlu oluşturucu sürümü için Android release APK derle, doğrula ve teslim et
+- [x] Ana sohbet başlığı, boş durum, mesaj hiyerarşisi ve oluşturucu yüzeyini ortak amiral gemisi tasarım sistemiyle yenile
+- [x] Çalışma çekmecesi, oturum listesi, komut merkezi, panolar ve ayar profil yönetimini aynı üst seviye yüzey diliyle birleştir
+- [x] Erişilebilir kontrast, dokunma hedefleri, loading/error/empty durumları ve hareket azaltma davranışını tüm ana akışlarda iyileştir
+- [x] Amiral gemisi arayüzü için widget regresyonları, analiz ve tam test paketini doğrula
+- [x] Amiral gemisi arayüz sürümü için Android release APK derle, doğrula ve teslim et

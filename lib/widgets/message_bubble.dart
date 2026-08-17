@@ -59,15 +59,30 @@ class MessageBubble extends StatelessWidget {
                   Flexible(
                     child: DecoratedBox(
                       decoration: BoxDecoration(
-                        color: isUser
-                            ? const Color(0x24FFFFFF)
-                            : const Color(0xFF111111),
+                        gradient: isUser
+                            ? const LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [Color(0x2D3A7BFF), Color(0x1BFFFFFF)],
+                              )
+                            : const LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [Color(0xFF18181B), Color(0xFF0F0F11)],
+                              ),
                         borderRadius: radius,
                         border: Border.all(
                           color: isUser
-                              ? const Color(0x33FFFFFF)
-                              : const Color(0x20FFFFFF),
+                              ? const Color(0x536DA4FF)
+                              : OxygenForgeTheme.surfaceStroke,
                         ),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color(0x28000000),
+                            blurRadius: 18,
+                            offset: Offset(0, 8),
+                          ),
+                        ],
                       ),
                       child: Padding(
                         padding: const EdgeInsets.fromLTRB(14, 11, 12, 10),

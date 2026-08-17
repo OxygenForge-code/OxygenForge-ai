@@ -154,3 +154,9 @@ Oluşturucu kapsülüne dinleme sırasında görünür, yavaş nefes alma/pulse 
 Animasyon katmanı `CustomPainter` ile çizildiği için içerik düzenini sürekli yeniden kurmaz. Sistem hareket azaltma tercihi açık olduğunda döngü durur, parlaklık ve ölçek sabitlenir. Widget testi sonsuz animasyonlarda `pumpAndSettle` zaman aşımına girmeyecek şekilde kontrollü zaman ilerletmeyle güncellendi. `flutter analyze` temiz geçti ve regresyon paketi **21/21 test** ile başarılı tamamlandı.
 
 Final APK `versionName 1.5.3`, `versionCode 22`, paket kimliği `com.oxygenforge.oxygenforge_ai` ve compileSdk 36 ile üretildi. APK Signature Scheme v2 imzası geçerli bulundu. Teslim APK SHA-256: `56c5cb172a47f297191a5b05c73458061888116c460edbe2013ba3ec407b8c74`.
+
+## Amiral gemisi arayüz QA (1.5.4)
+
+Tüm ana yüzeyler koyu derinlik, ince yarı saydam kenar, dengeli gölge ve mavi odak vurgusu kullanan ortak bir tasarım sisteminde toplandı. Ana boş durum artık giriş animasyonlu renkli Orbit Hero, arka plan ışığı ve Planla/Analiz et/Üret hızlı başlangıç yongalarıyla daha güçlü bir yönlendirme sağlar. Sohbet balonları kullanıcı ve asistan arasında daha belirgin yüzey hiyerarşisine, çekmece oturumları seçili durum gradyanına, bağlantı kartı ise premium katman ve durum rengine sahiptir. Ayar, komut merkezi ve çalışma panosu ortak panel tokenları aracılığıyla aynı yüzey dilini kullanır.
+
+`flutter analyze` temiz geçti ve regresyon paketi **21/21 test** ile başarılı tamamlandı. Final APK `versionName 1.5.4`, `versionCode 23`, paket kimliği `com.oxygenforge.oxygenforge_ai` ve compileSdk 36 ile üretildi. APK Signature Scheme v2 imzası geçerli bulundu. Teslim APK SHA-256: `dc6b8af6d15ae67d8fdbd0302661c67689905e47f4864d693a6f17da43688661`.
