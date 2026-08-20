@@ -167,6 +167,40 @@ extension AiProviderLabel on AiProvider {
     }
   }
 
+  List<String> get suggestedModels {
+    switch (this) {
+      case AiProvider.groq:
+        return const <String>[
+          'llama-3.3-70b-versatile',
+          'llama-3.1-8b-instant',
+          'llama-3.1-70b-versatile',
+        ];
+      default:
+        return <String>[defaultModel];
+    }
+  }
+
+  String get recoveryModel {
+    switch (this) {
+      case AiProvider.groq:
+        return 'llama-3.1-8b-instant';
+      default:
+        return defaultModel;
+    }
+  }
+
+  String? modelInputError(String rawModel) {
+    final model = rawModel.trim();
+    if (model.isEmpty) return null;
+    if (RegExp(r'\s').hasMatch(model)) {
+      return 'Model adı boşluk içeremez. Sağlayıcının model kimliğini aynen gir.';
+    }
+    if (this != AiProvider.custom && model == 'your-model') {
+      return '“your-model” yalnızca özel endpoint profilleri için kullanılabilir.';
+    }
+    return null;
+  }
+
   bool get isOpenAiCompatible =>
       this != AiProvider.gemini && this != AiProvider.anthropic;
 
@@ -530,6 +564,7 @@ class ApiProfile {
       endpoint.trim().isEmpty ? provider.defaultEndpoint : endpoint.trim();
   String get effectiveModel =>
       model.trim().isEmpty ? provider.defaultModel : model.trim();
+  String? get modelValidationError => provider.modelInputError(model);
   bool get isReady => apiKey.trim().isNotEmpty;
 
   ApiProfile copyWith({

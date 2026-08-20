@@ -160,3 +160,14 @@ Final APK `versionName 1.5.3`, `versionCode 22`, paket kimliği `com.oxygenforge
 Tüm ana yüzeyler koyu derinlik, ince yarı saydam kenar, dengeli gölge ve mavi odak vurgusu kullanan ortak bir tasarım sisteminde toplandı. Ana boş durum artık giriş animasyonlu renkli Orbit Hero, arka plan ışığı ve Planla/Analiz et/Üret hızlı başlangıç yongalarıyla daha güçlü bir yönlendirme sağlar. Sohbet balonları kullanıcı ve asistan arasında daha belirgin yüzey hiyerarşisine, çekmece oturumları seçili durum gradyanına, bağlantı kartı ise premium katman ve durum rengine sahiptir. Ayar, komut merkezi ve çalışma panosu ortak panel tokenları aracılığıyla aynı yüzey dilini kullanır.
 
 `flutter analyze` temiz geçti ve regresyon paketi **21/21 test** ile başarılı tamamlandı. Final APK `versionName 1.5.4`, `versionCode 23`, paket kimliği `com.oxygenforge.oxygenforge_ai` ve compileSdk 36 ile üretildi. APK Signature Scheme v2 imzası geçerli bulundu. Teslim APK SHA-256: `dc6b8af6d15ae67d8fdbd0302661c67689905e47f4864d693a6f17da43688661`.
+
+## Model erişim kurtarma QA (1.5.5)
+
+Sağlayıcı hata metninde `model` veya `not found` ifadeleri bulunuyorsa HTTP 400, 404 ve 422 yanıtları artık genel istek hatası yerine `modelNotFound` olarak sınıflandırılır. Hata kartı, kullanıcıyı engellemeden iki çözüm sunar: seçili profil için güvenli önerilen modele geçip son istemi otomatik yeniden gönderme veya profili doğrudan düzenleme. Groq profilleri için `llama-3.3-70b-versatile`, `llama-3.1-8b-instant` ve `llama-3.1-70b-versatile` öneri olarak görünür; kurtarma aksiyonu hızlı `llama-3.1-8b-instant` modelini kullanır. Bu iki model kimliği Groq’un resmi sohbet/model belgelerindeki örneklerde doğrulanmıştır. [1] [2]
+
+Profil kaydetme aşamasında boşluk içeren model kimlikleri ve yalnızca özel endpoint profilinde geçerli olan `your-model` yer tutucusu engellenir. Servis testi, erişilemeyen eski bir Groq modeli için `modelNotFound` üretildiğini; widget testi ise güvenli modele geçiş ve profil düzenleme düğmelerinin görünür ve çalışır olduğunu doğrular.
+
+`flutter analyze` temiz geçti ve tam regresyon paketi **23/23 test** ile başarılı tamamlandı. Final APK `versionName 1.5.5`, `versionCode 24`, paket kimliği `com.oxygenforge.oxygenforge_ai` ve compileSdk 36 ile üretildi. APK Signature Scheme v2 imzası geçerli bulundu. Teslim APK SHA-256: `120791394a42d99bc386c7c2d9673c1b724dfeda9d9ae8e758a7801c6bd03fb6`.
+
+[1]: https://console.groq.com/docs/text-chat "GroqDocs — Text Generation"
+[2]: https://console.groq.com/docs/model/llama-3.1-8b-instant "GroqDocs — Llama 3.1 8B Instant"

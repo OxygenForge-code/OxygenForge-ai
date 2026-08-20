@@ -99,3 +99,8 @@
 - [x] Erişilebilir kontrast, dokunma hedefleri, loading/error/empty durumları ve hareket azaltma davranışını tüm ana akışlarda iyileştir
 - [x] Amiral gemisi arayüzü için widget regresyonları, analiz ve tam test paketini doğrula
 - [x] Amiral gemisi arayüz sürümü için Android release APK derle, doğrula ve teslim et
+- [x] Sağlayıcı profillerinde geçersiz veya erişilemeyen model adlarını önceden denetle
+- [x] Groq için güvenli varsayılan model ve model değiştirerek kurtarma akışı ekle
+- [x] Erişim/model hatası kartını anlaşılır Türkçe açıklama, uygulanabilir öneri ve doğrudan çözüm aksiyonuyla güncelle
+- [x] Model hatası senaryolarını servis ve widget regresyonlarıyla doğrula
+- [x] Model kurtarma düzeltmesi için Android release APK derle, doğrula ve teslim et

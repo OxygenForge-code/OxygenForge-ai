@@ -1536,6 +1536,38 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Future<void> _useRecommendedModel() async {
+    final profile = _settings.activeProfile;
+    final recommendedModel = profile.provider.recoveryModel;
+    final updatedProfile = profile.copyWith(
+      model: recommendedModel,
+      updatedAt: DateTime.now(),
+    );
+    final next = _settings.hasProfiles
+        ? _settings.withProfiles(
+            _settings.profiles
+                .map((item) => item.id == profile.id ? updatedProfile : item)
+                .toList(),
+            activeProfileId: profile.id,
+          )
+        : _settings.copyWith(model: recommendedModel);
+
+    await _store.saveSettings(next);
+    if (!mounted) return;
+    setState(() {
+      _settings = next;
+      _lastError = null;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          '${profile.provider.label} profili $recommendedModel modeline geçirildi. Son istem yeniden gönderiliyor.',
+        ),
+      ),
+    );
+    await _retryLastPrompt();
+  }
+
   Future<void> _clearSessions() async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -2013,6 +2045,7 @@ class _HomeScreenState extends State<HomeScreen> {
             exception: _lastError!,
             onRetry: _retryLastPrompt,
             onSettings: _openSettings,
+            onUseRecommendedModel: _useRecommendedModel,
           );
         }
         return MessageBubble(

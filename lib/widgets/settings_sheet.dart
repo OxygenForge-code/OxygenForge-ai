@@ -47,8 +47,11 @@ class _SettingsSheetState extends State<SettingsSheet> {
       context: context,
       isScrollControlled: true,
       backgroundColor: OxygenForgeTheme.panel,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
-      builder: (_) => ProfileEditorSheet(initial: _newProfile(AiProvider.openai)),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (_) =>
+          ProfileEditorSheet(initial: _newProfile(AiProvider.openai)),
     );
     if (!mounted || profile == null) return;
     setState(() {
@@ -62,12 +65,16 @@ class _SettingsSheetState extends State<SettingsSheet> {
       context: context,
       isScrollControlled: true,
       backgroundColor: OxygenForgeTheme.panel,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
       builder: (_) => ProfileEditorSheet(initial: profile),
     );
     if (!mounted || replacement == null) return;
     setState(() {
-      _profiles = _profiles.map((item) => item.id == replacement.id ? replacement : item).toList();
+      _profiles = _profiles
+          .map((item) => item.id == replacement.id ? replacement : item)
+          .toList();
     });
   }
 
@@ -82,12 +89,19 @@ class _SettingsSheetState extends State<SettingsSheet> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Text('${profile.name} silinsin mi?'),
-        content: const Text('Bu profilin anahtarı ve özel ayarları cihazdan kaldırılacak.'),
+        content: const Text(
+          'Bu profilin anahtarı ve özel ayarları cihazdan kaldırılacak.',
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Vazgeç')),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Vazgeç'),
+          ),
           FilledButton(
             onPressed: () => Navigator.pop(dialogContext, true),
-            style: FilledButton.styleFrom(backgroundColor: OxygenForgeTheme.error),
+            style: FilledButton.styleFrom(
+              backgroundColor: OxygenForgeTheme.error,
+            ),
             child: const Text('Sil'),
           ),
         ],
@@ -96,7 +110,9 @@ class _SettingsSheetState extends State<SettingsSheet> {
     if (!mounted || shouldDelete != true) return;
     setState(() {
       _profiles = _profiles.where((item) => item.id != profile.id).toList();
-      if (_selectedProfileId == profile.id) _selectedProfileId = _profiles.first.id;
+      if (_selectedProfileId == profile.id) {
+        _selectedProfileId = _profiles.first.id;
+      }
     });
   }
 
@@ -110,10 +126,11 @@ class _SettingsSheetState extends State<SettingsSheet> {
       );
     } catch (error) {
       if (!mounted) return;
-      final message = error is AiServiceException ? '${error.title}: ${error.message}' : error.toString();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Test başarısız: $message')),
-      );
+      final message = error is AiServiceException
+          ? '${error.title}: ${error.message}'
+          : error.toString();
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Test başarısız: $message')));
     } finally {
       if (mounted) setState(() => _testingProfileId = null);
     }
@@ -133,7 +150,12 @@ class _SettingsSheetState extends State<SettingsSheet> {
     return SafeArea(
       top: false,
       child: Padding(
-        padding: EdgeInsets.fromLTRB(20, 12, 20, MediaQuery.viewInsetsOf(context).bottom + 20),
+        padding: EdgeInsets.fromLTRB(
+          20,
+          12,
+          20,
+          MediaQuery.viewInsetsOf(context).bottom + 20,
+        ),
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 720),
           child: Column(
@@ -144,11 +166,17 @@ class _SettingsSheetState extends State<SettingsSheet> {
                 child: Container(
                   width: 42,
                   height: 4,
-                  decoration: BoxDecoration(color: OxygenForgeTheme.line, borderRadius: BorderRadius.circular(99)),
+                  decoration: BoxDecoration(
+                    color: OxygenForgeTheme.line,
+                    borderRadius: BorderRadius.circular(99),
+                  ),
                 ),
               ),
               const SizedBox(height: 20),
-              const Text('API profilleri', style: TextStyle(fontSize: 23, fontWeight: FontWeight.w800)),
+              const Text(
+                'API profilleri',
+                style: TextStyle(fontSize: 23, fontWeight: FontWeight.w800),
+              ),
               const SizedBox(height: 5),
               const Text(
                 'Birden fazla sağlayıcıyı ayrı profil olarak kaydet, tek dokunuşla aktif profili değiştir.',
@@ -168,7 +196,8 @@ class _SettingsSheetState extends State<SettingsSheet> {
                       profile: profile,
                       selected: selected,
                       testing: testing,
-                      onSelect: () => setState(() => _selectedProfileId = profile.id),
+                      onSelect: () =>
+                          setState(() => _selectedProfileId = profile.id),
                       onEdit: () => _editProfile(profile),
                       onDelete: () => _deleteProfile(profile),
                       onTest: () => _testProfile(profile),
@@ -184,19 +213,30 @@ class _SettingsSheetState extends State<SettingsSheet> {
                 style: OutlinedButton.styleFrom(
                   foregroundColor: OxygenForgeTheme.text,
                   side: const BorderSide(color: OxygenForgeTheme.line),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 13,
+                  ),
                 ),
               ),
               const SizedBox(height: 14),
               const Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.shield_outlined, size: 15, color: OxygenForgeTheme.muted),
+                  Icon(
+                    Icons.shield_outlined,
+                    size: 15,
+                    color: OxygenForgeTheme.muted,
+                  ),
                   SizedBox(width: 7),
                   Expanded(
                     child: Text(
                       'Anahtarlar yalnızca bu cihazdaki yerel depolamada saklanır. Bağlantı testi kısa bir model isteği gönderir ve sağlayıcı kotası kullanabilir.',
-                      style: TextStyle(color: OxygenForgeTheme.muted, fontSize: 11, height: 1.4),
+                      style: TextStyle(
+                        color: OxygenForgeTheme.muted,
+                        fontSize: 11,
+                        height: 1.4,
+                      ),
                     ),
                   ),
                 ],
@@ -244,22 +284,30 @@ class _ProfileTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final accent = selected ? OxygenForgeTheme.violetBright : OxygenForgeTheme.line;
+    final accent = selected
+        ? OxygenForgeTheme.violetBright
+        : OxygenForgeTheme.line;
     return InkWell(
       onTap: onSelect,
       borderRadius: BorderRadius.circular(17),
       child: Container(
         padding: const EdgeInsets.fromLTRB(14, 13, 8, 13),
         decoration: BoxDecoration(
-          color: selected ? OxygenForgeTheme.violet.withValues(alpha: 0.11) : OxygenForgeTheme.panelRaised,
+          color: selected
+              ? OxygenForgeTheme.violet.withValues(alpha: 0.11)
+              : OxygenForgeTheme.panelRaised,
           borderRadius: BorderRadius.circular(17),
           border: Border.all(color: accent),
         ),
         child: Row(
           children: [
             Icon(
-              selected ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
-              color: selected ? OxygenForgeTheme.violetBright : OxygenForgeTheme.muted,
+              selected
+                  ? Icons.check_circle_rounded
+                  : Icons.radio_button_unchecked_rounded,
+              color: selected
+                  ? OxygenForgeTheme.violetBright
+                  : OxygenForgeTheme.muted,
               size: 22,
             ),
             const SizedBox(width: 4),
@@ -267,19 +315,41 @@ class _ProfileTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(profile.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w800)),
+                  Text(
+                    profile.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontWeight: FontWeight.w800),
+                  ),
                   const SizedBox(height: 4),
-                  Text('${profile.provider.label}  ·  ${profile.effectiveModel}', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: OxygenForgeTheme.muted, fontSize: 11.5)),
+                  Text(
+                    '${profile.provider.label}  ·  ${profile.effectiveModel}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: OxygenForgeTheme.muted,
+                      fontSize: 11.5,
+                    ),
+                  ),
                   const SizedBox(height: 5),
                   Text(
                     profile.isReady ? 'Anahtar hazır' : 'API anahtarı eksik',
-                    style: TextStyle(color: profile.isReady ? OxygenForgeTheme.green : OxygenForgeTheme.error, fontSize: 10.5, fontWeight: FontWeight.w700),
+                    style: TextStyle(
+                      color: profile.isReady
+                          ? OxygenForgeTheme.green
+                          : OxygenForgeTheme.error,
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ],
               ),
             ),
             PopupMenuButton<String>(
-              icon: const Icon(Icons.more_vert_rounded, color: OxygenForgeTheme.muted),
+              icon: const Icon(
+                Icons.more_vert_rounded,
+                color: OxygenForgeTheme.muted,
+              ),
               color: OxygenForgeTheme.panelRaised,
               onSelected: (value) {
                 switch (value) {
@@ -292,9 +362,21 @@ class _ProfileTile extends StatelessWidget {
                 }
               },
               itemBuilder: (_) => [
-                PopupMenuItem(value: 'test', enabled: !testing, child: Text(testing ? 'Test ediliyor…' : 'Bağlantıyı test et')),
-                const PopupMenuItem(value: 'edit', child: Text('Profili düzenle')),
-                const PopupMenuItem(value: 'delete', child: Text('Profili sil')),
+                PopupMenuItem(
+                  value: 'test',
+                  enabled: !testing,
+                  child: Text(
+                    testing ? 'Test ediliyor…' : 'Bağlantıyı test et',
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'edit',
+                  child: Text('Profili düzenle'),
+                ),
+                const PopupMenuItem(
+                  value: 'delete',
+                  child: Text('Profili sil'),
+                ),
               ],
             ),
           ],
@@ -321,6 +403,7 @@ class _ProfileEditorSheetState extends State<ProfileEditorSheet> {
   late TextEditingController _modelController;
   late TextEditingController _systemPromptController;
   late double _temperature;
+  String? _modelValidationMessage;
 
   @override
   void initState() {
@@ -330,7 +413,9 @@ class _ProfileEditorSheetState extends State<ProfileEditorSheet> {
     _keyController = TextEditingController(text: widget.initial.apiKey);
     _endpointController = TextEditingController(text: widget.initial.endpoint);
     _modelController = TextEditingController(text: widget.initial.model);
-    _systemPromptController = TextEditingController(text: widget.initial.systemPrompt);
+    _systemPromptController = TextEditingController(
+      text: widget.initial.systemPrompt,
+    );
     _temperature = widget.initial.temperature;
   }
 
@@ -350,23 +435,35 @@ class _ProfileEditorSheetState extends State<ProfileEditorSheet> {
       _provider = provider;
       _endpointController.text = provider.defaultEndpoint;
       _modelController.text = provider.defaultModel;
-      if (_nameController.text.trim().isEmpty || _nameController.text == '${widget.initial.provider.label} profili') {
+      _modelValidationMessage = null;
+      if (_nameController.text.trim().isEmpty ||
+          _nameController.text == '${widget.initial.provider.label} profili') {
         _nameController.text = '${provider.label} profili';
       }
     });
   }
 
   void _save() {
-    final name = _nameController.text.trim().isEmpty ? '${_provider.label} profili' : _nameController.text.trim();
+    final model = _modelController.text.trim();
+    final modelValidationMessage = _provider.modelInputError(model);
+    if (modelValidationMessage != null) {
+      setState(() => _modelValidationMessage = modelValidationMessage);
+      return;
+    }
+    final name = _nameController.text.trim().isEmpty
+        ? '${_provider.label} profili'
+        : _nameController.text.trim();
     Navigator.of(context).pop(
       widget.initial.copyWith(
         name: name,
         provider: _provider,
         apiKey: _keyController.text.trim(),
         endpoint: _endpointController.text.trim(),
-        model: _modelController.text.trim(),
+        model: model,
         temperature: _temperature,
-        systemPrompt: _systemPromptController.text.trim().isEmpty ? AppSettings.defaultSystemPrompt : _systemPromptController.text.trim(),
+        systemPrompt: _systemPromptController.text.trim().isEmpty
+            ? AppSettings.defaultSystemPrompt
+            : _systemPromptController.text.trim(),
         updatedAt: DateTime.now(),
       ),
     );
@@ -377,60 +474,156 @@ class _ProfileEditorSheetState extends State<ProfileEditorSheet> {
     return SafeArea(
       top: false,
       child: Padding(
-        padding: EdgeInsets.fromLTRB(20, 14, 20, MediaQuery.viewInsetsOf(context).bottom + 20),
+        padding: EdgeInsets.fromLTRB(
+          20,
+          14,
+          20,
+          MediaQuery.viewInsetsOf(context).bottom + 20,
+        ),
         child: SingleChildScrollView(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 720),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Center(child: Container(width: 42, height: 4, decoration: BoxDecoration(color: OxygenForgeTheme.line, borderRadius: BorderRadius.circular(99)))),
+                Center(
+                  child: Container(
+                    width: 42,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: OxygenForgeTheme.line,
+                      borderRadius: BorderRadius.circular(99),
+                    ),
+                  ),
+                ),
                 const SizedBox(height: 20),
-                const Text('API profilini düzenle', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
+                const Text(
+                  'API profilini düzenle',
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
+                ),
                 const SizedBox(height: 18),
                 TextField(
                   controller: _nameController,
-                  decoration: const InputDecoration(labelText: 'Profil adı', prefixIcon: Icon(Icons.badge_outlined)),
+                  decoration: const InputDecoration(
+                    labelText: 'Profil adı',
+                    prefixIcon: Icon(Icons.badge_outlined),
+                  ),
                 ),
                 const SizedBox(height: 14),
                 DropdownButtonFormField<AiProvider>(
                   initialValue: _provider,
-                  decoration: const InputDecoration(labelText: 'AI sağlayıcısı', prefixIcon: Icon(Icons.cloud_rounded)),
+                  decoration: const InputDecoration(
+                    labelText: 'AI sağlayıcısı',
+                    prefixIcon: Icon(Icons.cloud_rounded),
+                  ),
                   dropdownColor: OxygenForgeTheme.panelRaised,
-                  items: AiProvider.values.map((provider) => DropdownMenuItem(value: provider, child: Text('${provider.label}  ·  ${provider.subtitle}'))).toList(),
+                  items: AiProvider.values
+                      .map(
+                        (provider) => DropdownMenuItem(
+                          value: provider,
+                          child: Text(
+                            '${provider.label}  ·  ${provider.subtitle}',
+                          ),
+                        ),
+                      )
+                      .toList(),
                   onChanged: _changeProvider,
                 ),
                 const SizedBox(height: 14),
                 TextField(
                   controller: _keyController,
                   obscureText: true,
-                  decoration: InputDecoration(labelText: '${_provider.label} API anahtarı', prefixIcon: const Icon(Icons.key_rounded)),
+                  decoration: InputDecoration(
+                    labelText: '${_provider.label} API anahtarı',
+                    prefixIcon: const Icon(Icons.key_rounded),
+                  ),
                 ),
                 const SizedBox(height: 14),
                 TextField(
                   controller: _endpointController,
                   keyboardType: TextInputType.url,
-                  decoration: const InputDecoration(labelText: 'API endpoint', prefixIcon: Icon(Icons.link_rounded)),
+                  decoration: const InputDecoration(
+                    labelText: 'API endpoint',
+                    prefixIcon: Icon(Icons.link_rounded),
+                  ),
                 ),
                 const SizedBox(height: 14),
                 TextField(
                   controller: _modelController,
-                  decoration: InputDecoration(labelText: 'Model', hintText: _provider.defaultModel, prefixIcon: const Icon(Icons.auto_awesome_rounded)),
+                  onChanged: (_) {
+                    if (_modelValidationMessage != null) {
+                      setState(() => _modelValidationMessage = null);
+                    }
+                  },
+                  decoration: InputDecoration(
+                    labelText: 'Model',
+                    hintText: _provider.defaultModel,
+                    prefixIcon: const Icon(Icons.auto_awesome_rounded),
+                    errorText: _modelValidationMessage,
+                  ),
                 ),
+                if (_provider.suggestedModels.length > 1) ...[
+                  const SizedBox(height: 10),
+                  const Text(
+                    'Önerilen Groq modelleri',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: OxygenForgeTheme.muted,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: _provider.suggestedModels.map((model) {
+                      return ChoiceChip(
+                        label: Text(model),
+                        selected: _modelController.text.trim() == model,
+                        onSelected: (_) {
+                          setState(() {
+                            _modelController.text = model;
+                            _modelValidationMessage = null;
+                          });
+                        },
+                      );
+                    }).toList(),
+                  ),
+                ],
                 const SizedBox(height: 18),
                 Row(
                   children: [
-                    const Text('Yaratıcılık', style: TextStyle(fontWeight: FontWeight.w700)),
+                    const Text(
+                      'Yaratıcılık',
+                      style: TextStyle(fontWeight: FontWeight.w700),
+                    ),
                     const Spacer(),
-                    Text(_temperature.toStringAsFixed(1), style: const TextStyle(color: OxygenForgeTheme.violetBright, fontWeight: FontWeight.w700)),
+                    Text(
+                      _temperature.toStringAsFixed(1),
+                      style: const TextStyle(
+                        color: OxygenForgeTheme.violetBright,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                   ],
                 ),
-                Slider(value: _temperature, min: 0, max: 1.5, divisions: 15, activeColor: OxygenForgeTheme.violetBright, onChanged: (value) => setState(() => _temperature = value)),
+                Slider(
+                  value: _temperature,
+                  min: 0,
+                  max: 1.5,
+                  divisions: 15,
+                  activeColor: OxygenForgeTheme.violetBright,
+                  onChanged: (value) => setState(() => _temperature = value),
+                ),
                 TextField(
                   controller: _systemPromptController,
                   minLines: 2,
                   maxLines: 4,
-                  decoration: const InputDecoration(labelText: 'Sistem promptu', prefixIcon: Icon(Icons.psychology_alt_rounded), alignLabelWithHint: true),
+                  decoration: const InputDecoration(
+                    labelText: 'Sistem promptu',
+                    prefixIcon: Icon(Icons.psychology_alt_rounded),
+                    alignLabelWithHint: true,
+                  ),
                 ),
                 const SizedBox(height: 20),
                 SizedBox(
@@ -439,7 +632,11 @@ class _ProfileEditorSheetState extends State<ProfileEditorSheet> {
                     onPressed: _save,
                     icon: const Icon(Icons.save_rounded),
                     label: const Text('Profili kaydet'),
-                    style: FilledButton.styleFrom(backgroundColor: OxygenForgeTheme.violet, foregroundColor: Colors.black, padding: const EdgeInsets.symmetric(vertical: 15)),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: OxygenForgeTheme.violet,
+                      foregroundColor: Colors.black,
+                      padding: const EdgeInsets.symmetric(vertical: 15),
+                    ),
                   ),
                 ),
               ],

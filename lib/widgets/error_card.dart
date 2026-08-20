@@ -8,16 +8,19 @@ class ErrorCard extends StatelessWidget {
     required this.exception,
     required this.onRetry,
     required this.onSettings,
+    required this.onUseRecommendedModel,
     super.key,
   });
 
   final AiServiceException exception;
   final VoidCallback onRetry;
   final VoidCallback onSettings;
+  final VoidCallback onUseRecommendedModel;
 
   @override
   Widget build(BuildContext context) {
     final needsVisionModel = exception.kind == AiFailureKind.visionUnsupported;
+    final needsModelRecovery = exception.kind == AiFailureKind.modelNotFound;
     return Padding(
       padding: const EdgeInsets.only(bottom: 24),
       child: GlassCard(
@@ -35,13 +38,21 @@ class ErrorCard extends StatelessWidget {
                     color: OxygenForgeTheme.error.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Icon(Icons.error_outline_rounded, color: OxygenForgeTheme.error, size: 20),
+                  child: const Icon(
+                    Icons.error_outline_rounded,
+                    color: OxygenForgeTheme.error,
+                    size: 20,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     exception.title,
-                    style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: OxygenForgeTheme.error),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 15,
+                      color: OxygenForgeTheme.error,
+                    ),
                   ),
                 ),
               ],
@@ -49,7 +60,11 @@ class ErrorCard extends StatelessWidget {
             const SizedBox(height: 14),
             Text(
               exception.message,
-              style: const TextStyle(fontSize: 13.5, height: 1.45, color: OxygenForgeTheme.text),
+              style: const TextStyle(
+                fontSize: 13.5,
+                height: 1.45,
+                color: OxygenForgeTheme.text,
+              ),
             ),
             const SizedBox(height: 12),
             Container(
@@ -61,12 +76,20 @@ class ErrorCard extends StatelessWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.lightbulb_outline_rounded, size: 16, color: OxygenForgeTheme.muted),
+                  const Icon(
+                    Icons.lightbulb_outline_rounded,
+                    size: 16,
+                    color: OxygenForgeTheme.muted,
+                  ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
                       exception.recoveryTip,
-                      style: const TextStyle(fontSize: 12, color: OxygenForgeTheme.muted, height: 1.4),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: OxygenForgeTheme.muted,
+                        height: 1.4,
+                      ),
                     ),
                   ),
                 ],
@@ -86,6 +109,33 @@ class ErrorCard extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
                 ),
+              )
+            else if (needsModelRecovery)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  FilledButton.icon(
+                    onPressed: onUseRecommendedModel,
+                    icon: const Icon(Icons.bolt_rounded, size: 17),
+                    label: Text('${exception.recoveryModel} modelini kullan'),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: OxygenForgeTheme.referenceBlueBright,
+                      foregroundColor: Colors.black,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  OutlinedButton.icon(
+                    onPressed: onSettings,
+                    icon: const Icon(Icons.tune_rounded, size: 16),
+                    label: const Text('Profili düzenle'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: OxygenForgeTheme.text,
+                      side: const BorderSide(color: OxygenForgeTheme.line),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  ),
+                ],
               )
             else
               Row(
@@ -109,7 +159,9 @@ class ErrorCard extends StatelessWidget {
                       icon: const Icon(Icons.refresh_rounded, size: 16),
                       label: const Text('Tekrar dene'),
                       style: FilledButton.styleFrom(
-                        backgroundColor: OxygenForgeTheme.error.withValues(alpha: 0.8),
+                        backgroundColor: OxygenForgeTheme.error.withValues(
+                          alpha: 0.8,
+                        ),
                         foregroundColor: Colors.black,
                         padding: const EdgeInsets.symmetric(vertical: 12),
                       ),

@@ -11,6 +11,7 @@ enum AiFailureKind {
   rateLimit,
   visionUnsupported,
   invalidRequest,
+  modelNotFound,
   server,
   decoding,
   unknown,
@@ -29,6 +30,8 @@ class AiServiceException implements Exception {
   final String message;
   final int? statusCode;
 
+  String get recoveryModel => provider.recoveryModel;
+
   String get title {
     switch (kind) {
       case AiFailureKind.network:
@@ -41,6 +44,8 @@ class AiServiceException implements Exception {
         return 'Görsel için uyumlu model seçilmeli';
       case AiFailureKind.invalidRequest:
         return 'İstek kabul edilmedi';
+      case AiFailureKind.modelNotFound:
+        return 'Model kullanılamıyor';
       case AiFailureKind.server:
         return 'Sağlayıcı geçici olarak yanıt vermiyor';
       case AiFailureKind.decoding:
@@ -62,6 +67,8 @@ class AiServiceException implements Exception {
         return 'Seçili profil için görsel destekleyen bir model seç veya Gemini, OpenAI ya da Anthropic profilini kullan.';
       case AiFailureKind.invalidRequest:
         return 'Model adını, endpoint’i ve sağlayıcının desteklediği parametreleri kontrol et.';
+      case AiFailureKind.modelNotFound:
+        return 'Model adı geçersiz, kaldırılmış veya bu hesapta erişime açık olmayabilir. “Önerilen modeli kullan” ile güvenli modele geçebilir ya da profili düzenleyebilirsin.';
       case AiFailureKind.server:
         return 'Sağlayıcı durumunu kontrol et veya geçici olarak başka bir sağlayıcıya geç.';
       case AiFailureKind.decoding:
@@ -500,20 +507,33 @@ class AiService {
     if (response.statusCode >= 200 && response.statusCode < 300) return;
     final error = decoded?['error'];
     final message = error is Map ? error['message'] : null;
+    final errorMessage =
+        message?.toString() ?? 'HTTP ${response.statusCode} yanıtı alındı.';
+    final isModelFailure = _isModelFailure(response.statusCode, errorMessage);
     final kind = switch (response.statusCode) {
       401 || 403 => AiFailureKind.authentication,
       429 => AiFailureKind.rateLimit,
       >= 500 => AiFailureKind.server,
-      400 || 404 || 422 => AiFailureKind.invalidRequest,
+      400 || 404 || 422 =>
+        isModelFailure
+            ? AiFailureKind.modelNotFound
+            : AiFailureKind.invalidRequest,
       _ => AiFailureKind.unknown,
     };
     throw AiServiceException(
       kind: kind,
       provider: settings.provider,
       statusCode: response.statusCode,
-      message:
-          message?.toString() ?? 'HTTP ${response.statusCode} yanıtı alındı.',
+      message: errorMessage,
     );
+  }
+
+  bool _isModelFailure(int statusCode, String message) {
+    if (statusCode != 400 && statusCode != 404 && statusCode != 422) {
+      return false;
+    }
+    final normalized = message.toLowerCase();
+    return normalized.contains('model') || normalized.contains('not found');
   }
 
   AiResponse _parseAssistantResponse(String rawText) {
